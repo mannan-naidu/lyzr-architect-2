@@ -104,3 +104,5 @@ ARCHITECTURE.md            # the graded architecture write-up
 
 Don't build later-session features until their session: Sandpack preview, GitHub push, deploy,
 Pro-mode file tree, agent harness. Stubs/placeholders are fine.
+
+@AGENTS.md
