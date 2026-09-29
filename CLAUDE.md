@@ -50,7 +50,8 @@ components/
   ui/                      # shadcn/ui primitives (generated — edit sparingly)
   *.tsx                    # small shared components (theme toggle, logo, ...)
 lib/
-  env.ts                   # zod-validated env (server + public)
+  env.ts                   # zod-validated public env (NEXT_PUBLIC_*)
+  env.server.ts            # zod-validated server env (secrets; server-only)
   supabase/{client,server,middleware}.ts
   types/database.ts        # hand-written DB row types (regen later with supabase gen types)
   utils.ts                 # cn() helper
