@@ -63,8 +63,10 @@ Session title bar → cloud environment menu → **Edit** → **Network access**
 
 ## 3. Apply the database migrations
 
-> The cloud sandbox can't open raw Postgres connections (port 5432), so use either the SQL Editor
-> (paste each file in `supabase/migrations/` in name order) or give Claude a Supabase **personal
+> **Easiest:** Supabase → SQL Editor → New query → paste the whole of **`supabase/setup.sql`** → Run.
+> It is idempotent (safe on a fresh or half-migrated database, and safe to re-run).
+>
+> The cloud sandbox can't open raw Postgres connections (port 5432), so use either the SQL Editor or give Claude a Supabase **personal
 > access token** (Account → Access Tokens) as the `SUPABASE_ACCESS_TOKEN` environment variable,
 > and it runs them over HTTPS via the Management API.
 >

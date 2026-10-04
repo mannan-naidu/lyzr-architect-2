@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "db:migrate": "pnpm dlx supabase db push",
-    "db:new": "pnpm dlx supabase migration new"
+    "db:new": "pnpm dlx supabase migration new",
+    "db:setup-sql": "node scripts/build-setup-sql.mjs"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.71",

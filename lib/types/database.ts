@@ -25,6 +25,8 @@ export type Profile = {
   updated_at: string;
 };
 
+export type PlanStatus = "none" | "draft" | "approved";
+
 export type Project = {
   id: string;
   owner_id: string;
@@ -34,6 +36,12 @@ export type Project = {
   mode: AppMode;
   github_repo: string | null;
   memory_enabled: boolean;
+  plan: Json | null;
+  agent_spec: Json | null;
+  plan_status: PlanStatus;
+  seo_enabled: boolean;
+  cms_enabled: boolean;
+  deploy_slug: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -46,6 +54,8 @@ export type Message = {
   model: string | null;
   tokens_in: number | null;
   tokens_out: number | null;
+  billed_to: "user" | "agent";
+  kind: "chat" | "plan" | "build" | "fix";
   created_at: string;
 };
 
@@ -54,6 +64,64 @@ export type ProjectFile = {
   project_id: string;
   path: string;
   content: string;
+  previous_content: string | null;
+  updated_by: "agent" | "user";
+  updated_at: string;
+};
+
+export type RunEventKind = "plan" | "recall" | "tool" | "file" | "error" | "fix" | "deploy" | "log" | "check";
+
+export type RunEvent = {
+  id: string;
+  project_id: string;
+  run_id: string;
+  kind: RunEventKind;
+  title: string;
+  detail: Json;
+  tokens_in: number | null;
+  tokens_out: number | null;
+  created_at: string;
+};
+
+export type FixOutcome = "pending" | "succeeded" | "failed" | "rolled_back";
+
+export type FixAttempt = {
+  id: string;
+  project_id: string;
+  owner_id: string;
+  error_signature: string;
+  error_message: string;
+  attempt: number;
+  fix_summary: string;
+  outcome: FixOutcome;
+  tokens: number;
+  created_at: string;
+};
+
+export type Decision = {
+  id: string;
+  project_id: string;
+  text: string;
+  source: "plan" | "chat" | "user" | "fix";
+  created_at: string;
+};
+
+export type GithubConnection = {
+  user_id: string;
+  login: string | null;
+  token_ciphertext: string;
+  scopes: string | null;
+  updated_at: string;
+};
+
+export type CmsEntry = {
+  id: string;
+  project_id: string;
+  collection: "pages" | "posts" | "faqs";
+  slug: string;
+  title: string;
+  body: string;
+  status: "draft" | "published";
   updated_at: string;
 };
 
@@ -63,6 +131,8 @@ export type Deployment = {
   status: DeploymentStatus;
   url: string | null;
   logs: Json;
+  seo_score: number | null;
+  security_findings: Json;
   created_at: string;
 };
 
@@ -90,6 +160,29 @@ export type Database = {
       deployments: Table<
         Deployment,
         Pick<Deployment, "project_id"> & Partial<Omit<Deployment, "project_id">>
+      >;
+      run_events: Table<
+        RunEvent,
+        Pick<RunEvent, "project_id" | "run_id" | "kind" | "title"> &
+          Partial<Omit<RunEvent, "project_id" | "run_id" | "kind" | "title">>
+      >;
+      fix_attempts: Table<
+        FixAttempt,
+        Pick<FixAttempt, "project_id" | "error_signature" | "error_message" | "attempt" | "fix_summary"> &
+          Partial<Omit<FixAttempt, "project_id" | "error_signature" | "error_message" | "attempt" | "fix_summary">>
+      >;
+      decisions: Table<
+        Decision,
+        Pick<Decision, "project_id" | "text"> & Partial<Omit<Decision, "project_id" | "text">>
+      >;
+      github_connections: Table<
+        GithubConnection,
+        Pick<GithubConnection, "token_ciphertext"> & Partial<Omit<GithubConnection, "token_ciphertext">>
+      >;
+      cms_entries: Table<
+        CmsEntry,
+        Pick<CmsEntry, "project_id" | "collection" | "slug" | "title"> &
+          Partial<Omit<CmsEntry, "project_id" | "collection" | "slug" | "title">>
       >;
     };
     Views: Record<never, never>;
