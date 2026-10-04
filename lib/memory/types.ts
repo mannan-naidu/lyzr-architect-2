@@ -27,3 +27,15 @@ export type UsagePartData = {
   /** Who this turn is billed to: the user's request vs an agent self-fix (free). */
   billedTo: "user" | "agent-self-fix";
 };
+
+/** A stored memory as shown in the Memory panel. */
+export type StoredMemory = {
+  id: string;
+  content: string;
+  /** How many times this fact was observed / reinforced. */
+  timesSeen: number;
+  createdAt: string;
+  lastSeenAt: string;
+  /** Learned (at least partly) in the current project. */
+  inProject: boolean;
+};

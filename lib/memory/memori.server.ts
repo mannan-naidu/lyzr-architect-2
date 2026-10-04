@@ -43,8 +43,88 @@ export async function createMemoriProvider(connectionString: string): Promise<Me
   const scoped = (who: { userId: string; projectId: string; sessionId: string }) =>
     memori.forRequest({ entityId: who.userId, processId: who.projectId, sessionId: who.sessionId });
 
+  // Memori has no list/update/delete API, so the Memory panel works on its tables directly.
+  // Every statement is scoped to the entity whose external_id is the signed-in user's id.
+  // A fact belongs to a project when it was mentioned in that project's session: we use the
+  // project id as Memori's session id (Memori leaves session.process_id empty in BYODB mode).
+  const IN_PROJECT = `exists (
+      select 1 from memori_entity_fact_mention m
+      join memori_conversation c on c.id = m.conversation_id
+      join memori_session s on s.id = c.session_id
+      where m.entity_id = f.entity_id and m.fact_id = f.id and s.uuid = $2)`;
+
   return {
     name: "memori",
+
+    async list(userId, projectId) {
+      const { rows } = await pool.query<{
+        uuid: string;
+        content: string;
+        num_times: string;
+        date_created: Date;
+        date_last_time: Date;
+        in_project: boolean;
+      }>(
+        `select f.uuid, f.content, f.num_times, f.date_created, f.date_last_time, ${IN_PROJECT} as in_project
+           from memori_entity_fact f
+           join memori_entity e on e.id = f.entity_id
+          where e.external_id = $1
+          order by f.date_last_time desc
+          limit 300`,
+        [userId, projectId],
+      );
+      return rows.map((r) => ({
+        id: r.uuid,
+        content: r.content,
+        timesSeen: Number(r.num_times),
+        createdAt: r.date_created.toISOString(),
+        lastSeenAt: r.date_last_time.toISOString(),
+        inProject: r.in_project,
+      }));
+    },
+
+    async update(userId, memoryId, content) {
+      const { rowCount } = await pool.query(
+        `update memori_entity_fact f set content = $3, date_updated = now()
+           from memori_entity e
+          where e.id = f.entity_id and e.external_id = $1 and f.uuid = $2`,
+        [userId, memoryId, content],
+      );
+      return (rowCount ?? 0) > 0;
+    },
+
+    async remove(userId, memoryId) {
+      const { rowCount } = await pool.query(
+        `delete from memori_entity_fact f
+          using memori_entity e
+          where e.id = f.entity_id and e.external_id = $1 and f.uuid = $2`,
+        [userId, memoryId],
+      );
+      return (rowCount ?? 0) > 0;
+    },
+
+    async forgetProject(userId, projectId) {
+      // Facts mentioned in this project and nowhere else, then the project's sessions.
+      const { rowCount } = await pool.query(
+        `delete from memori_entity_fact f
+          using memori_entity e
+          where e.id = f.entity_id and e.external_id = $1
+            and ${IN_PROJECT}
+            and not exists (
+              select 1 from memori_entity_fact_mention m
+              join memori_conversation c on c.id = m.conversation_id
+              join memori_session s on s.id = c.session_id
+              where m.entity_id = f.entity_id and m.fact_id = f.id and s.uuid <> $2)`,
+        [userId, projectId],
+      );
+      await pool.query(
+        `delete from memori_session s
+          using memori_entity e
+          where s.entity_id = e.id and e.external_id = $1 and s.uuid = $2`,
+        [userId, projectId],
+      );
+      return rowCount ?? 0;
+    },
 
     async recall(who, query) {
       try {

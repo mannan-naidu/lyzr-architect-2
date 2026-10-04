@@ -136,15 +136,19 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
         }
       }
 
-      // 2. Generate.
+      // 2. Generate, with the decision log injected every turn so long chats don't lose context.
       const memoryContext = formatMemoryContext(recalled);
+      const { data: decisionRows } = await supabase.from("decisions").select("text").eq("project_id", projectId);
+      const decisionContext = decisionRows?.length
+        ? `Decisions already made for this project (keep to them unless the user changes them):\n${decisionRows.map((d) => `- ${d.text}`).join("\n")}`
+        : null;
       const projectContext = `Project: ${project.name} (framework: ${project.framework}).${
         project.description ? ` Goal: ${project.description}` : ""
       }`;
 
       const result = streamText({
         model: resolved.model,
-        instructions: [BUILDER_INSTRUCTIONS, projectContext, memoryContext].filter(Boolean).join("\n\n"),
+        instructions: [BUILDER_INSTRUCTIONS, projectContext, decisionContext, memoryContext].filter(Boolean).join("\n\n"),
         messages: await convertToModelMessages(messages.filter((m) => m.role !== "system")),
         maxOutputTokens: MAX_OUTPUT_TOKENS,
         onEnd: async ({ text, totalUsage }) => {

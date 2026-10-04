@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { RecalledMemory } from "@/lib/memory/types";
+import type { RecalledMemory, StoredMemory } from "@/lib/memory/types";
 
 /**
  * Pluggable memory layer (ADR-004). The chat route and Memory panel depend only on this
@@ -27,6 +27,14 @@ export interface MemoryProvider {
   recall(who: MemoryAttribution, query: string): Promise<RecalledMemory[]>;
   /** Hand a finished turn to the provider for fact extraction. Resolves when queued. */
   capture(who: MemoryAttribution, turn: ConversationTurn): Promise<void>;
+
+  // ── Memory panel (transparency + control). Always scoped to `userId`. ──────────────────
+  /** Everything remembered about this user; `inProject` marks facts learned in `projectId`. */
+  list(userId: string, projectId: string): Promise<StoredMemory[]>;
+  update(userId: string, memoryId: string, content: string): Promise<boolean>;
+  remove(userId: string, memoryId: string): Promise<boolean>;
+  /** Forget what was learned only in this project (facts also seen elsewhere are kept). */
+  forgetProject(userId: string, projectId: string): Promise<number>;
 }
 
 /** Used when memory is off for a project or no memory backend is configured. */
@@ -36,6 +44,18 @@ export const noopMemory: MemoryProvider = {
     return [];
   },
   async capture() {},
+  async list() {
+    return [];
+  },
+  async update() {
+    return false;
+  },
+  async remove() {
+    return false;
+  },
+  async forgetProject() {
+    return 0;
+  },
 };
 
 let provider: Promise<MemoryProvider | null> | undefined;

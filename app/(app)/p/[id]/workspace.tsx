@@ -2,10 +2,13 @@
 
 import {
   ActivityIcon,
+  BotIcon,
   BrainIcon,
   ChevronDownIcon,
+  ClipboardListIcon,
   CodeIcon,
   EyeIcon,
+  FileTextIcon,
   RocketIcon,
   ScrollTextIcon,
   SparklesIcon,
@@ -31,87 +34,78 @@ import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ArchitectUIMessage } from "@/lib/chat/types";
 import { defaultModelFor, MODELS, PROVIDER_LABELS, type ProviderId } from "@/lib/models";
-import { FRAMEWORK_LABELS, type AppMode, type Project } from "@/lib/types/database";
+import { FRAMEWORK_LABELS, type AgentFramework, type AppMode } from "@/lib/types/database";
 
 import { setProjectMode } from "./actions";
-
-type WorkspaceProject = Pick<
-  Project,
-  "id" | "name" | "description" | "framework" | "mode" | "memory_enabled" | "github_repo"
->;
+import { AgentsPanel } from "./panels/agents-panel";
+import { CodePanel } from "./panels/code-panel";
+import { ContentPanel } from "./panels/content-panel";
+import { LogsPanel, TracePanel } from "./panels/logs-panel";
+import { MemoryPanel } from "./panels/memory-panel";
+import { PlanPanel } from "./panels/plan-panel";
+import { PreviewPanel } from "./panels/preview-panel";
+import { ShipPanel } from "./panels/ship-panel";
+import { useWorkspace, WorkspaceProvider, type WorkspaceData } from "./workspace-context";
 
 type PanelTab = {
   value: string;
   label: string;
   icon: ComponentType<{ className?: string }>;
   proOnly?: boolean;
-  title: string;
-  body: string;
+  /** Only shown when the project has content mode on. */
+  cmsOnly?: boolean;
 };
 
 const PANEL_TABS: PanelTab[] = [
-  {
-    value: "preview",
-    label: "Preview",
-    icon: EyeIcon,
-    title: "Live preview",
-    body: "Your agent's UI renders here with Sandpack as Architect writes files.",
-  },
-  {
-    value: "code",
-    label: "Code",
-    icon: CodeIcon,
-    title: "Code",
-    body: "Generated files and diffs. Pro mode adds the file tree.",
-  },
-  {
-    value: "memory",
-    label: "Memory",
-    icon: BrainIcon,
-    title: "Memory",
-    body: "Everything Architect remembers about you and this project — view, edit or delete any memory.",
-  },
-  {
-    value: "deploy",
-    label: "Deploy",
-    icon: RocketIcon,
-    title: "Deploy",
-    body: "Ship your agent and watch the build logs stream in.",
-  },
-  {
-    value: "logs",
-    label: "Logs",
-    icon: ScrollTextIcon,
-    proOnly: true,
-    title: "Logs",
-    body: "Runtime and sandbox logs.",
-  },
-  {
-    value: "trace",
-    label: "Trace",
-    icon: ActivityIcon,
-    proOnly: true,
-    title: "Agent trace",
-    body: "Every step the builder agent took: plan, memory recall, tool calls, file writes.",
-  },
+  { value: "plan", label: "Plan", icon: ClipboardListIcon },
+  { value: "preview", label: "Preview", icon: EyeIcon },
+  { value: "code", label: "Code", icon: CodeIcon },
+  { value: "memory", label: "Memory", icon: BrainIcon },
+  { value: "agents", label: "Agents", icon: BotIcon },
+  { value: "content", label: "Content", icon: FileTextIcon, cmsOnly: true },
+  { value: "ship", label: "Ship", icon: RocketIcon },
+  { value: "logs", label: "Logs", icon: ScrollTextIcon, proOnly: true },
+  { value: "trace", label: "Trace", icon: ActivityIcon, proOnly: true },
 ];
 
-const comingSoon = (what: string) =>
-  toast.info(`${what} is coming soon.`, { description: "This flow is being built next." });
-
 export function Workspace({
-  project,
+  data,
   initialMessages,
   availableProviders,
 }: {
-  project: WorkspaceProject;
+  data: WorkspaceData;
   initialMessages: ArchitectUIMessage[];
   /** Providers with an API key configured on the server; other models show as unavailable. */
   availableProviders: ProviderId[];
 }) {
+  const [modelId, setModelId] = useState<string>(() => defaultModelFor(availableProviders).id);
+
+  return (
+    <WorkspaceProvider data={data} modelId={modelId}>
+      <WorkspaceShell
+        initialMessages={initialMessages}
+        availableProviders={availableProviders}
+        modelId={modelId}
+        setModelId={setModelId}
+      />
+    </WorkspaceProvider>
+  );
+}
+
+function WorkspaceShell({
+  initialMessages,
+  availableProviders,
+  modelId,
+  setModelId,
+}: {
+  initialMessages: ArchitectUIMessage[];
+  availableProviders: ProviderId[];
+  modelId: string;
+  setModelId: (id: string) => void;
+}) {
+  const { project, activeTab, setActiveTab } = useWorkspace();
   const [mode, setOptimisticMode] = useOptimistic<AppMode>(project.mode);
   const [, startTransition] = useTransition();
-  const [modelId, setModelId] = useState<string>(() => defaultModelFor(availableProviders).id);
   const model = MODELS.find((m) => m.id === modelId) ?? MODELS[0];
 
   const changeMode = (next: string) => {
@@ -123,7 +117,9 @@ export function Workspace({
     });
   };
 
-  const tabs = PANEL_TABS.filter((tab) => mode === "pro" || !tab.proOnly);
+  const pro = mode === "pro";
+  const tabs = PANEL_TABS.filter((t) => (pro || !t.proOnly) && (project.cms_enabled || !t.cmsOnly));
+  const current = tabs.some((t) => t.value === activeTab) ? activeTab : "preview";
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -134,7 +130,9 @@ export function Workspace({
           <span className="text-muted-foreground">workspace / </span>
           {project.name}
         </h1>
-        <span className="label-mono hidden text-primary sm:inline">{FRAMEWORK_LABELS[project.framework]}</span>
+        <span className="label-mono hidden text-primary sm:inline">
+          {FRAMEWORK_LABELS[project.framework as AgentFramework] ?? project.framework}
+        </span>
         {project.memory_enabled ? (
           <span className="label-mono hidden items-center gap-1 text-muted-foreground sm:inline-flex">
             <BrainIcon className="size-3" /> Memory on
@@ -157,7 +155,7 @@ export function Workspace({
                 <ChevronDownIcon className="size-3.5 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-60">
+            <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuRadioGroup value={modelId} onValueChange={setModelId}>
                 {(Object.keys(PROVIDER_LABELS) as ProviderId[]).map((provider, i) => (
                   <DropdownMenuGroup key={provider}>
@@ -170,9 +168,7 @@ export function Workspace({
                       return (
                         <DropdownMenuRadioItem key={m.id} value={m.id} disabled={!enabled}>
                           <span className="flex-1">{m.label}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {enabled ? m.hint : "no key"}
-                          </span>
+                          <span className="text-xs text-muted-foreground">{enabled ? m.hint : "no key"}</span>
                         </DropdownMenuRadioItem>
                       );
                     })}
@@ -185,14 +181,14 @@ export function Workspace({
           <Separator orientation="vertical" className="h-6" />
 
           <div className="flex items-center gap-2" data-tour="ship">
-          <Button variant="outline" size="sm" onClick={() => comingSoon("Push to GitHub")}>
-            <GitHubIcon className="size-3.5" />
-            <span className="hidden md:inline">GitHub</span>
-          </Button>
-          <Button size="sm" onClick={() => comingSoon("Deploy")}>
-            <RocketIcon className="size-3.5" />
-            <span className="hidden md:inline">Deploy</span>
-          </Button>
+            <Button variant="outline" size="sm" onClick={() => setActiveTab("ship")}>
+              <GitHubIcon className="size-3.5" />
+              <span className="hidden md:inline">GitHub</span>
+            </Button>
+            <Button size="sm" onClick={() => setActiveTab("ship")}>
+              <RocketIcon className="size-3.5" />
+              <span className="hidden md:inline">Deploy</span>
+            </Button>
           </div>
         </div>
       </div>
@@ -209,11 +205,12 @@ export function Workspace({
         />
 
         <Tabs
-          defaultValue="preview"
+          value={current}
+          onValueChange={setActiveTab}
           data-tour="panels"
           className="flex min-h-0 flex-1 flex-col gap-0 border-t md:border-t-0 md:border-l"
         >
-          <div className="border-b px-3 py-2">
+          <div className="overflow-x-auto border-b px-3 py-2">
             <TabsList>
               {tabs.map(({ value, label, icon: Icon }) => (
                 <TabsTrigger key={value} value={value}>
@@ -223,15 +220,39 @@ export function Workspace({
               ))}
             </TabsList>
           </div>
-          {tabs.map(({ value, icon: Icon, title, body }) => (
-            <TabsContent key={value} value={value} className="flex min-h-0 flex-1 items-center justify-center p-6">
-              <div className="max-w-sm space-y-2 text-center">
-                <Icon className="mx-auto size-8 text-muted-foreground" />
-                <h2 className="font-medium">{title}</h2>
-                <p className="text-sm text-muted-foreground">{body}</p>
-              </div>
+          <TabsContent value="plan" className="min-h-0 flex-1 overflow-y-auto">
+            <PlanPanel />
+          </TabsContent>
+          <TabsContent value="preview" className="min-h-0 flex-1" forceMount hidden={current !== "preview"}>
+            <PreviewPanel />
+          </TabsContent>
+          <TabsContent value="code" className="min-h-0 flex-1">
+            <CodePanel pro={pro} />
+          </TabsContent>
+          <TabsContent value="memory" className="min-h-0 flex-1 overflow-y-auto">
+            <MemoryPanel />
+          </TabsContent>
+          <TabsContent value="agents" className="min-h-0 flex-1 overflow-y-auto">
+            <AgentsPanel pro={pro} />
+          </TabsContent>
+          {project.cms_enabled ? (
+            <TabsContent value="content" className="min-h-0 flex-1 overflow-y-auto">
+              <ContentPanel />
             </TabsContent>
-          ))}
+          ) : null}
+          <TabsContent value="ship" className="min-h-0 flex-1 overflow-y-auto">
+            <ShipPanel />
+          </TabsContent>
+          {pro ? (
+            <>
+              <TabsContent value="logs" className="min-h-0 flex-1 overflow-y-auto">
+                <LogsPanel />
+              </TabsContent>
+              <TabsContent value="trace" className="min-h-0 flex-1 overflow-y-auto">
+                <TracePanel />
+              </TabsContent>
+            </>
+          ) : null}
         </Tabs>
       </div>
     </div>
