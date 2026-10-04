@@ -2,12 +2,25 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { z } from "zod";
 
 import { safeNextPath } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
-/** Starts GitHub OAuth via Supabase and redirects the browser to GitHub. */
-export async function signInWithGitHub(formData: FormData) {
+const PROVIDER_SCOPES = {
+  // `repo` lets us push generated projects later (see ADR-002 for the trade-off).
+  github: "read:user user:email repo",
+  google: "openid email profile",
+} as const;
+
+const providerSchema = z.enum(["github", "google"]);
+
+/** Starts OAuth via Supabase (GitHub or Google) and redirects the browser to the provider. */
+export async function signInWithProvider(formData: FormData) {
+  const parsed = providerSchema.safeParse(formData.get("provider"));
+  if (!parsed.success) redirect("/login?error=unknown_provider");
+  const provider = parsed.data;
+
   const next = safeNextPath(formData.get("next")?.toString());
   const headerList = await headers();
   const origin =
@@ -16,11 +29,10 @@ export async function signInWithGitHub(formData: FormData) {
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "github",
+    provider,
     options: {
       redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      // `repo` lets us push generated projects later (see ADR-002 for the trade-off).
-      scopes: "read:user user:email repo",
+      scopes: PROVIDER_SCOPES[provider],
     },
   });
 

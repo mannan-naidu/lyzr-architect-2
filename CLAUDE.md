@@ -26,7 +26,7 @@ The original kickoff brief lives in `docs/KICKOFF.md`. **Scope, feature list and
 | --- | --- |
 | App | Next.js (App Router) + TypeScript (strict) + Tailwind + shadcn/ui |
 | Hosting | Vercel (auto-deploys from `main`; branches get preview URLs) |
-| Auth | Supabase Auth with GitHub OAuth (`repo` scope so we can push later) |
+| Auth | Supabase Auth with Google + GitHub OAuth (GitHub `repo` scope so we can push later) |
 | Database | Supabase Postgres, with migrations in `supabase/migrations/` |
 | Memory | Memori (`@memorilabs/memori`) on the same Postgres, in its own schema; Memori Cloud as fallback |
 | LLM | Vercel AI SDK with a provider switcher (Anthropic, OpenAI, Google, OpenRouter) |

@@ -41,6 +41,18 @@ Session title bar → cloud environment menu → **Edit** → **Network access**
 
 > The app requests the `repo` scope at login so we can push later. See ADR-002 for the trade-off.
 
+## 2b. Google sign-in (OAuth client)
+
+- [ ] https://console.cloud.google.com → create or pick a project → **APIs & Services → OAuth
+      consent screen**: External, app name `Architect 2.0`, support email, scopes `openid`,
+      `email`, `profile` → add yourself as a test user (or publish).
+- [ ] **APIs & Services → Credentials → Create credentials → OAuth client ID** → *Web
+      application*.
+  - Authorized JavaScript origins: `http://localhost:3000` and your Vercel URL.
+  - **Authorized redirect URI:** `https://<supabase-project-ref>.supabase.co/auth/v1/callback`
+- [ ] Copy the **Client ID** and **Client secret** → Supabase → **Authentication → Sign In /
+      Providers → Google** → enable, paste both → **Save**.
+
 ## 3. Apply the database migration
 
 From a machine (or the cloud session) with network access to Supabase:

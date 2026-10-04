@@ -1,4 +1,4 @@
-import { GitHubIcon } from "@/components/icons";
+import { GitHubIcon, GoogleIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { safeNextPath } from "@/lib/auth";
 
-import { signInWithGitHub } from "./actions";
+import { signInWithProvider } from "./actions";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;
@@ -25,14 +25,17 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <CardHeader>
           <CardTitle>Sign in</CardTitle>
           <CardDescription>
-            Use your GitHub account. We&apos;ll ask for repo access so Architect can push your
-            projects later.
+            Pick an account. You can connect GitHub later to push your projects.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={signInWithGitHub}>
+          <form action={signInWithProvider} className="flex flex-col gap-2">
             <input type="hidden" name="next" value={next} />
-            <Button type="submit" className="w-full">
+            <Button type="submit" name="provider" value="google" variant="outline" className="w-full">
+              <GoogleIcon className="size-4" />
+              Continue with Google
+            </Button>
+            <Button type="submit" name="provider" value="github" className="w-full">
               <GitHubIcon className="size-4" />
               Continue with GitHub
             </Button>
