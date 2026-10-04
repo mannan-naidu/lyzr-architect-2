@@ -7,6 +7,8 @@ Postgres, in its own schema, from our Next.js/TypeScript stack?
 
 ## TL;DR
 
+- ✅ **It works end to end (run 2).** The spike stored *"prefers Tailwind"*, then recalled it in a
+  new session and injected it into the prompt, all in our own Postgres under the `memori` schema.
 - ✅ **The TypeScript SDK supports our own Postgres (BYODB).** `@memorilabs/memori` (use the `beta`
   dist-tag, `0.1.25-beta`; `latest` is an old `0.0.11`) takes a `pg.Pool` via
   `new Memori({ conn: () => pool })` and creates its tables with `storage.build()`.
@@ -78,8 +80,41 @@ What this shows:
   unless we cache it. Options: bundle the model files into the deployment and point `HF_HOME` at
   them, run `build()` once in a migration step, or use Memori Cloud.
 
-Not yet verified (it needs `huggingface.co` + `api.memorilabs.ai` allowed, plus an LLM key or the
-mock): storing *"prefers Tailwind"* and recalling it in a new session. To re-run:
+Run 2 (2026-10-04, after `huggingface.co` and `*.memorilabs.ai` were allowed): same local
+Postgres 16 and mock LLM, no `MEMORI_API_KEY` (anonymous, rate-limited augmentation).
+
+```
+▸ storage.build() OK                5564 ms   (first run includes the ~87 MB model download)
+▸ Tables in "memori"                memori_conversation, memori_conversation_message, memori_entity,
+                                    memori_entity_fact, memori_entity_fact_mention, memori_knowledge_graph,
+                                    memori_object, memori_predicate, memori_process,
+                                    memori_process_attribute, memori_schema_version, memori_session,
+                                    memori_subject
+▸ Attribution                       entity = spike-user-0001, process = spike-project-0001
+▸ Call 1 → "For every project I build, I prefer Tailwind CSS for styling. Please remember that."
+▸ augmentation.wait()               flushed
+▸ Manual recall                     "The user prefers Tailwind CSS for styling for every project
+                                     they build."  score 0.55
+▸ Call 2 (new session) → "Which CSS framework do I prefer for styling?"
+  system prompt received by the LLM:
+    <memori_context> … Relevant context about the user:
+    - The user prefers Tailwind CSS for styling for every project they build. …
+    </memori_context>
+▸ rows: memori_entity 1 · memori_process 1 · memori_conversation_message 4 · memori_entity_fact 1
+```
+
+✅ **Store → extract → recall in a new session → prompt injection all work.** Notes:
+
+- The model is cached in `.fastembed_cache/` (gitignored). Production needs that path on a
+  persistent or bundled location.
+- `pg` warns that the `search_path` query in the pool's `connect` handler overlaps Memori's first
+  query. The fix is to set the schema at connection start instead (a connection-string or pool
+  `options: "-c search_path=memori"` parameter). We need to confirm Supabase's session pooler
+  passes that through.
+- Not yet run against hosted Supabase (no credentials yet) or a real LLM (no API keys yet). The
+  mock LLM proves the interception path, and recall doesn't depend on the LLM.
+
+To re-run:
 
 ```bash
 DATABASE_URL=postgresql://… pnpm tsx scripts/memori-spike.ts          # BYODB (mock LLM if no key)
