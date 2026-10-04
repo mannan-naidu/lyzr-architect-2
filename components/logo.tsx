@@ -1,15 +1,15 @@
-import { SparklesIcon } from "lucide-react";
 import Link from "next/link";
 
-export function Logo({ href = "/" }: { href?: string }) {
+import { cn } from "@/lib/utils";
+
+/** Wordmark: wide lowercase "architect" with a mono version tag. */
+export function Logo({ href = "/", inverted = false }: { href?: string; inverted?: boolean }) {
   return (
-    <Link href={href} className="flex items-center gap-2 font-semibold tracking-tight">
-      <span className="flex size-7 items-center justify-center rounded-md bg-primary text-primary-foreground">
-        <SparklesIcon className="size-4" />
+    <Link href={href} className="flex items-baseline gap-2" aria-label="Architect 2.0 home">
+      <span className={cn("font-wide text-xl font-bold tracking-tight", inverted ? "text-[var(--ink)]" : "text-foreground")}>
+        architect
       </span>
-      <span>
-        Architect <span className="text-muted-foreground">2.0</span>
-      </span>
+      <span className={cn("label-mono", inverted ? "text-[var(--ink)]/70" : "text-primary")}>2.0</span>
     </Link>
   );
 }
