@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Memori / fastembed embedding model cache (downloaded at runtime)
+.fastembed_cache/

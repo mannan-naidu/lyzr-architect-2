@@ -11,8 +11,10 @@ import type { Database } from "@/lib/types/database";
  * signed-in user (RLS applies). Create one per request — never cache it in module scope.
  */
 export async function createClient() {
-  const env = publicEnv();
+  // Read cookies first: it marks the route dynamic, so `next build` never prerenders it (and
+  // never needs Supabase env at build time).
   const cookieStore = await cookies();
+  const env = publicEnv();
 
   return createServerClient<Database>(
     env.NEXT_PUBLIC_SUPABASE_URL,
