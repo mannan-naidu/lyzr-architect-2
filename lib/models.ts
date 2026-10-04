@@ -1,7 +1,7 @@
 // Client-safe model catalogue. The server-side registry (lib/ai/registry.server.ts) maps these
 // ids to provider SDK instances; the UI only ever sees ids, labels and prices.
 
-export type ProviderId = "anthropic" | "openai" | "google" | "openrouter";
+export type ProviderId = "anthropic" | "openai" | "google" | "groq" | "openrouter";
 
 export type ModelOption = {
   /** `provider:model` — stored in profiles.default_model and messages.model. */
@@ -18,6 +18,7 @@ export const PROVIDER_LABELS: Record<ProviderId, string> = {
   anthropic: "Anthropic",
   openai: "OpenAI",
   google: "Google",
+  groq: "Groq",
   openrouter: "OpenRouter",
 };
 
@@ -47,6 +48,9 @@ export const MODELS: readonly ModelOption[] = [
   { id: "openai:gpt-6-luna", label: "GPT-6 Luna", provider: "openai" },
   { id: "google:gemini-3.1-pro-preview", label: "Gemini 3.1 Pro", provider: "google" },
   { id: "google:gemini-3.5-flash", label: "Gemini 3.5 Flash", provider: "google" },
+  { id: "groq:openai/gpt-oss-120b", label: "GPT-OSS 120B", provider: "groq", hint: "Open weights, very fast" },
+  { id: "groq:openai/gpt-oss-20b", label: "GPT-OSS 20B", provider: "groq", hint: "Fastest" },
+  { id: "groq:qwen/qwen3.8-27b", label: "Qwen 3.8 27B", provider: "groq", hint: "Open weights" },
   {
     id: "openrouter:meta-llama/llama-3.3-70b-instruct",
     label: "Llama 3.3 70B",
@@ -56,6 +60,13 @@ export const MODELS: readonly ModelOption[] = [
 ];
 
 export const DEFAULT_MODEL_ID: ModelOption["id"] = "anthropic:claude-opus-5-5";
+
+/** First model whose provider has a key, so the picker never defaults to something unusable. */
+export function defaultModelFor(available: readonly ProviderId[]): ModelOption {
+  return MODELS.find((m) => m.id === DEFAULT_MODEL_ID && available.includes(m.provider))
+    ?? MODELS.find((m) => available.includes(m.provider))
+    ?? MODELS[0];
+}
 
 export function findModel(id: string): ModelOption | undefined {
   return MODELS.find((m) => m.id === id);

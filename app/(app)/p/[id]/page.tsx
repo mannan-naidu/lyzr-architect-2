@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
+import { availableProviders } from "@/lib/ai/registry.server";
 import type { ArchitectUIMessage } from "@/lib/chat/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -35,5 +36,11 @@ export default async function ProjectPage({ params }: PageProps<"/p/[id]">) {
     parts: [{ type: "text", text: m.content }],
   }));
 
-  return <Workspace project={project} initialMessages={initialMessages} />;
+  return (
+    <Workspace
+      project={project}
+      initialMessages={initialMessages}
+      availableProviders={availableProviders()}
+    />
+  );
 }

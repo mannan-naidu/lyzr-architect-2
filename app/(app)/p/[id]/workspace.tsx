@@ -30,7 +30,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ArchitectUIMessage } from "@/lib/chat/types";
-import { DEFAULT_MODEL_ID, MODELS, PROVIDER_LABELS, type ProviderId } from "@/lib/models";
+import { defaultModelFor, MODELS, PROVIDER_LABELS, type ProviderId } from "@/lib/models";
 import { FRAMEWORK_LABELS, type AppMode, type Project } from "@/lib/types/database";
 
 import { setProjectMode } from "./actions";
@@ -102,13 +102,16 @@ const comingSoon = (what: string, session: number) =>
 export function Workspace({
   project,
   initialMessages,
+  availableProviders,
 }: {
   project: WorkspaceProject;
   initialMessages: ArchitectUIMessage[];
+  /** Providers with an API key configured on the server; other models show as unavailable. */
+  availableProviders: ProviderId[];
 }) {
   const [mode, setOptimisticMode] = useOptimistic<AppMode>(project.mode);
   const [, startTransition] = useTransition();
-  const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID);
+  const [modelId, setModelId] = useState<string>(() => defaultModelFor(availableProviders).id);
   const model = MODELS.find((m) => m.id === modelId) ?? MODELS[0];
 
   const changeMode = (next: string) => {
@@ -160,11 +163,17 @@ export function Workspace({
                     <DropdownMenuLabel className="text-xs text-muted-foreground">
                       {PROVIDER_LABELS[provider]}
                     </DropdownMenuLabel>
-                    {MODELS.filter((m) => m.provider === provider).map((m) => (
-                      <DropdownMenuRadioItem key={m.id} value={m.id}>
-                        {m.label}
-                      </DropdownMenuRadioItem>
-                    ))}
+                    {MODELS.filter((m) => m.provider === provider).map((m) => {
+                      const enabled = availableProviders.includes(m.provider);
+                      return (
+                        <DropdownMenuRadioItem key={m.id} value={m.id} disabled={!enabled}>
+                          <span className="flex-1">{m.label}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {enabled ? m.hint : "no key"}
+                          </span>
+                        </DropdownMenuRadioItem>
+                      );
+                    })}
                   </DropdownMenuGroup>
                 ))}
               </DropdownMenuRadioGroup>

@@ -15,6 +15,7 @@ const LLM_KEYS = [
   "ANTHROPIC_API_KEY",
   "OPENAI_API_KEY",
   "GOOGLE_GENERATIVE_AI_API_KEY",
+  "GROQ_API_KEY",
   "OPENROUTER_API_KEY",
 ] as const;
 
@@ -28,6 +29,7 @@ const serverSchema = publicSchema
     ANTHROPIC_API_KEY: optionalKey,
     OPENAI_API_KEY: optionalKey,
     GOOGLE_GENERATIVE_AI_API_KEY: optionalKey,
+    GROQ_API_KEY: optionalKey,
     OPENROUTER_API_KEY: optionalKey,
     MEMORI_API_KEY: optionalKey,
   })
@@ -47,6 +49,7 @@ const llmSchema = z.object({
   ANTHROPIC_API_KEY: optionalKey,
   OPENAI_API_KEY: optionalKey,
   GOOGLE_GENERATIVE_AI_API_KEY: optionalKey,
+  GROQ_API_KEY: optionalKey,
   OPENROUTER_API_KEY: optionalKey,
   /** Per-user daily token cap across all projects (protects the shared demo keys). */
   DAILY_TOKEN_CAP: z.coerce.number().int().positive().default(200_000),

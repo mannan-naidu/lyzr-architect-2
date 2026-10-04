@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import type { LanguageModel } from "ai";
@@ -28,6 +29,7 @@ const KEY_FOR: Record<ProviderId, keyof ReturnType<typeof llmEnv>> = {
   anthropic: "ANTHROPIC_API_KEY",
   openai: "OPENAI_API_KEY",
   google: "GOOGLE_GENERATIVE_AI_API_KEY",
+  groq: "GROQ_API_KEY",
   openrouter: "OPENROUTER_API_KEY",
 };
 
@@ -58,6 +60,8 @@ export function resolveModel(modelId: string): { model: LanguageModel; option: M
       return { model: createOpenAI({ apiKey })(modelName), option };
     case "google":
       return { model: createGoogleGenerativeAI({ apiKey })(modelName), option };
+    case "groq":
+      return { model: createGroq({ apiKey })(modelName), option };
     case "openrouter":
       return { model: createOpenRouter({ apiKey }).chat(modelName), option };
   }

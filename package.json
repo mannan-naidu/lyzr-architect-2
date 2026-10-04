@@ -14,6 +14,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.71",
     "@ai-sdk/google": "^4.0.87",
+    "@ai-sdk/groq": "^4.0.54",
     "@ai-sdk/openai": "^4.0.83",
     "@ai-sdk/react": "^4.0.130",
     "@memorilabs/memori": "0.1.25-beta",

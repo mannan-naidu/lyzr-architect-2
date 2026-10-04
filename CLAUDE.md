@@ -29,7 +29,7 @@ The original kickoff brief lives in `docs/KICKOFF.md`. **Scope, feature list and
 | Auth | Supabase Auth with Google + GitHub OAuth (GitHub `repo` scope so we can push later) |
 | Database | Supabase Postgres, with migrations in `supabase/migrations/` |
 | Memory | Memori (`@memorilabs/memori`) on the same Postgres, in its own schema; Memori Cloud as fallback |
-| LLM | Vercel AI SDK with a provider switcher (Anthropic, OpenAI, Google, OpenRouter) |
+| LLM | Vercel AI SDK with a provider switcher (Anthropic, OpenAI, Google, Groq, OpenRouter) |
 | Live preview | Sandpack (later session) |
 | GitHub | Octokit (later session) |
 | Package manager | pnpm |
