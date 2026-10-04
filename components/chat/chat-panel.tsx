@@ -71,7 +71,7 @@ export function ChatPanel({ projectId, projectDescription, modelId, initialMessa
   };
 
   return (
-    <section aria-label="Chat" className="flex min-h-0 w-full flex-col md:w-[420px] md:shrink-0">
+    <section aria-label="Chat" data-tour="chat" className="flex min-h-0 w-full flex-col md:w-[420px] md:shrink-0">
       <ScrollArea className="min-h-0 flex-1">
         <div className="space-y-4 p-4">
           {initialMessages.length === 0 && runs.length === 0 ? (
@@ -101,7 +101,7 @@ export function ChatPanel({ projectId, projectDescription, modelId, initialMessa
             {running} prompt{running > 1 ? "s" : ""} running. You can keep sending; each runs in parallel.
           </p>
         ) : null}
-        <div className="rounded-lg border bg-card p-1.5 focus-within:ring-2 focus-within:ring-ring/50">
+        <div data-tour="chat-input" className="border bg-card p-1.5 focus-within:ring-2 focus-within:ring-ring/50">
           <Textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -160,15 +160,15 @@ function MessageView({ message }: { message: ArchitectUIMessage }) {
       {message.parts.map((part, i) => {
         switch (part.type) {
           case "text":
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "max-w-[90%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm",
-                  message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted",
-                )}
-              >
-                {part.text}
+            return message.role === "user" ? (
+              <div key={i} className="max-w-[90%] border bg-card px-3 py-2 text-sm">
+                <span className="label-mono block text-muted-foreground">You</span>
+                <span className="whitespace-pre-wrap">{part.text}</span>
+              </div>
+            ) : (
+              <div key={i} className="max-w-[95%] text-sm">
+                <span className="label-mono block text-primary">Architect</span>
+                <span className="whitespace-pre-wrap">{part.text}</span>
               </div>
             );
           case "data-memory":

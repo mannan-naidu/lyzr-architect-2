@@ -1,10 +1,11 @@
 "use client";
 
-import { FolderIcon, LayoutGridIcon, LogOutIcon, MoonIcon, PlusIcon, SearchIcon, SunIcon } from "lucide-react";
+import { CompassIcon, FolderIcon, LayoutGridIcon, LogOutIcon, MoonIcon, PlusIcon, SearchIcon, SunIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
+import { TOUR_EVENT } from "@/components/product-tour";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -14,7 +15,6 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-  CommandShortcut,
 } from "@/components/ui/command";
 
 export type PaletteProject = { id: string; name: string };
@@ -53,6 +53,7 @@ export function CommandPalette({ projects }: { projects: PaletteProject[] }) {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
+        data-tour="command-palette"
         className="hidden w-56 justify-between text-muted-foreground sm:flex"
       >
         <span className="flex items-center gap-2">
@@ -68,10 +69,12 @@ export function CommandPalette({ projects }: { projects: PaletteProject[] }) {
           <CommandGroup heading="Actions">
             <CommandItem onSelect={() => run(() => router.push("/dashboard?new=1"))}>
               <PlusIcon /> New project
-              <CommandShortcut>N</CommandShortcut>
             </CommandItem>
             <CommandItem onSelect={() => run(() => router.push("/dashboard"))}>
               <LayoutGridIcon /> All projects
+            </CommandItem>
+            <CommandItem onSelect={() => run(() => window.dispatchEvent(new Event(TOUR_EVENT)))}>
+              <CompassIcon /> Take the quick tour
             </CommandItem>
             <CommandItem onSelect={() => run(() => setTheme(resolvedTheme === "light" ? "dark" : "light"))}>
               {resolvedTheme === "light" ? <MoonIcon /> : <SunIcon />} Toggle theme

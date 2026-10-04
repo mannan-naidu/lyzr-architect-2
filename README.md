@@ -11,6 +11,21 @@ it. It's built for Lyzr's TPM assignment and extends architect.new.
 
 → **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) · **Decisions:** [docs/decisions.md](docs/decisions.md) · **Setup:** [docs/SETUP.md](docs/SETUP.md)
 
+## Design principles
+
+- **Familiar first.** The flow is the one people already know from vibe-coding tools: a prompt box
+  on the home page, then chat on the left and preview on the right, then GitHub and Deploy at top
+  right. Nothing needs re-learning. What's new (memory, cost and fix tracking) appears *inside*
+  that familiar flow as small, expandable details, not as new screens to learn.
+- **A quick tour at the start.** First-time users get a 7-step spotlight tour of the workspace
+  (prompt box, memory dropdown, model picker, Simple/Pro, panels, ⌘K, Ship). It is skippable,
+  shown once, and can be replayed from the ⌘K palette.
+- **Visual language.** "Ink & paper" (inspired by rig.ai): a near-black teal background with cream
+  type and a blue accent, wide display headings, mono labels, hairline grids and chamfered
+  buttons. A light ("paper") theme is included.
+- **Show, don't hide.** Every reply shows what was remembered and what it cost. Memory is
+  collapsed by default so the chat stays clean.
+
 ## Real vs simulated
 
 | Area | Status | Notes |

@@ -317,7 +317,9 @@ Every submission artifact (README, ARCHITECTURE.md intro, Loom, form answers) le
 **only we** have and lists features shared with other candidates **last**:
 1. Fix memory and the loop breaker → fair-billing ledger → builder memory and decision log →
    visible memory and "Why?" → agent memory toggle (Cognis-compatible) → SEO/GEO toggle.
-2. *Then* the shared baseline: Simple/Pro lenses, plan-before-build, framework/model-agnostic
+2. **Design principle (lead the UX story):** familiar vibe-coding flow with no learning curve,
+   plus a quick first-run tour. New ideas live inside the familiar flow.
+3. *Then* the shared baseline: Simple/Pro lenses, plan-before-build, framework/model-agnostic
    agents, GitHub, deploy, security check, click-to-edit.
 
 ---
@@ -340,6 +342,7 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-05 | UI theme after **rig.ai**; keep the generic vibe-coding flow (low learning curve); **quick tour** at start; mention both in the submission | theme tokens + landing/login/dashboard/workspace restyle; `components/product-tour.tsx`; README "Design principles" | ✅ built |
 | 2026-10-05 | **Parallel prompts** "the Claude way": send new prompts while earlier ones run, each streams independently without interrupting | chat panel | ✅ built |
 | 2026-10-05 | **Demo mode** (no account) | Supabase anonymous sign-in + seeded project + lower token cap | ✅ built (enable anonymous sign-ins in Supabase) |
 | 2026-10-05 | **Command palette** (⌘K) | app header | ✅ built |

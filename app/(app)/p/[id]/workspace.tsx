@@ -15,7 +15,7 @@ import { toast } from "sonner";
 
 import { ChatPanel } from "@/components/chat/chat-panel";
 import { GitHubIcon } from "@/components/icons";
-import { Badge } from "@/components/ui/badge";
+import { ProductTour, WORKSPACE_TOUR } from "@/components/product-tour";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,28 +55,28 @@ const PANEL_TABS: PanelTab[] = [
     label: "Preview",
     icon: EyeIcon,
     title: "Live preview",
-    body: "Your agent's UI renders here with Sandpack as Architect writes files. (Session 2)",
+    body: "Your agent's UI renders here with Sandpack as Architect writes files.",
   },
   {
     value: "code",
     label: "Code",
     icon: CodeIcon,
     title: "Code",
-    body: "Generated files and diffs. Pro mode adds the file tree. (Session 6)",
+    body: "Generated files and diffs. Pro mode adds the file tree.",
   },
   {
     value: "memory",
     label: "Memory",
     icon: BrainIcon,
     title: "Memory",
-    body: "Everything Architect remembers about you and this project — view, edit or delete any memory. (Session 3)",
+    body: "Everything Architect remembers about you and this project — view, edit or delete any memory.",
   },
   {
     value: "deploy",
     label: "Deploy",
     icon: RocketIcon,
     title: "Deploy",
-    body: "Ship your agent and watch the build logs stream in. (Session 5)",
+    body: "Ship your agent and watch the build logs stream in.",
   },
   {
     value: "logs",
@@ -84,7 +84,7 @@ const PANEL_TABS: PanelTab[] = [
     icon: ScrollTextIcon,
     proOnly: true,
     title: "Logs",
-    body: "Runtime and sandbox logs. (Session 6)",
+    body: "Runtime and sandbox logs.",
   },
   {
     value: "trace",
@@ -92,12 +92,12 @@ const PANEL_TABS: PanelTab[] = [
     icon: ActivityIcon,
     proOnly: true,
     title: "Agent trace",
-    body: "Every step the builder agent took: plan, memory recall, tool calls, file writes. (Session 6)",
+    body: "Every step the builder agent took: plan, memory recall, tool calls, file writes.",
   },
 ];
 
-const comingSoon = (what: string, session: number) =>
-  toast.info(`${what} is coming in Session ${session}.`, { description: "Stubbed in the Session 1 shell." });
+const comingSoon = (what: string) =>
+  toast.info(`${what} is coming soon.`, { description: "This flow is being built next." });
 
 export function Workspace({
   project,
@@ -129,18 +129,20 @@ export function Workspace({
     <div className="flex min-h-0 flex-1 flex-col">
       {/* ── Top bar ─────────────────────────────────────────────────────────────── */}
       <div className="flex h-12 shrink-0 items-center gap-3 border-b px-4">
-        <h1 className="truncate font-medium">{project.name}</h1>
-        <Badge variant="secondary" className="hidden sm:inline-flex">
-          {FRAMEWORK_LABELS[project.framework]}
-        </Badge>
+        <span className="size-1.5 shrink-0 rounded-full bg-[var(--green)]" aria-hidden />
+        <h1 className="truncate font-mono text-xs font-normal tracking-normal">
+          <span className="text-muted-foreground">workspace / </span>
+          {project.name}
+        </h1>
+        <span className="label-mono hidden text-primary sm:inline">{FRAMEWORK_LABELS[project.framework]}</span>
         {project.memory_enabled ? (
-          <Badge variant="outline" className="hidden gap-1 sm:inline-flex">
+          <span className="label-mono hidden items-center gap-1 text-muted-foreground sm:inline-flex">
             <BrainIcon className="size-3" /> Memory on
-          </Badge>
+          </span>
         ) : null}
 
         <div className="ml-auto flex items-center gap-2">
-          <Tabs value={mode} onValueChange={changeMode}>
+          <Tabs value={mode} onValueChange={changeMode} data-tour="mode-switch">
             <TabsList aria-label="Workspace mode">
               <TabsTrigger value="simple">Simple</TabsTrigger>
               <TabsTrigger value="pro">Pro</TabsTrigger>
@@ -149,7 +151,7 @@ export function Workspace({
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button variant="outline" size="sm" className="gap-1.5" data-tour="model-picker">
                 <SparklesIcon className="size-3.5" />
                 <span className="hidden md:inline">{model.label}</span>
                 <ChevronDownIcon className="size-3.5 opacity-60" />
@@ -182,16 +184,20 @@ export function Workspace({
 
           <Separator orientation="vertical" className="h-6" />
 
-          <Button variant="outline" size="sm" onClick={() => comingSoon("Push to GitHub", 4)}>
+          <div className="flex items-center gap-2" data-tour="ship">
+          <Button variant="outline" size="sm" onClick={() => comingSoon("Push to GitHub")}>
             <GitHubIcon className="size-3.5" />
             <span className="hidden md:inline">GitHub</span>
           </Button>
-          <Button size="sm" onClick={() => comingSoon("Deploy", 5)}>
+          <Button size="sm" onClick={() => comingSoon("Deploy")}>
             <RocketIcon className="size-3.5" />
             <span className="hidden md:inline">Deploy</span>
           </Button>
+          </div>
         </div>
       </div>
+
+      <ProductTour steps={WORKSPACE_TOUR} />
 
       {/* ── Body: chat | panels ─────────────────────────────────────────────────── */}
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
@@ -202,7 +208,11 @@ export function Workspace({
           initialMessages={initialMessages}
         />
 
-        <Tabs defaultValue="preview" className="flex min-h-0 flex-1 flex-col gap-0 border-t md:border-t-0 md:border-l">
+        <Tabs
+          defaultValue="preview"
+          data-tour="panels"
+          className="flex min-h-0 flex-1 flex-col gap-0 border-t md:border-t-0 md:border-l"
+        >
           <div className="border-b px-3 py-2">
             <TabsList>
               {tabs.map(({ value, label, icon: Icon }) => (
