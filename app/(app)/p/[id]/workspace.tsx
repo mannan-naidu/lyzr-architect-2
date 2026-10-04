@@ -2,7 +2,6 @@
 
 import {
   ActivityIcon,
-  ArrowUpIcon,
   BrainIcon,
   ChevronDownIcon,
   CodeIcon,
@@ -11,9 +10,10 @@ import {
   ScrollTextIcon,
   SparklesIcon,
 } from "lucide-react";
-import { useOptimistic, useState, useTransition, type ComponentType, type FormEvent } from "react";
+import { useOptimistic, useState, useTransition, type ComponentType } from "react";
 import { toast } from "sonner";
 
+import { ChatPanel } from "@/components/chat/chat-panel";
 import { GitHubIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
+import type { ArchitectUIMessage } from "@/lib/chat/types";
 import { DEFAULT_MODEL_ID, MODELS, PROVIDER_LABELS, type ProviderId } from "@/lib/models";
 import { FRAMEWORK_LABELS, type AppMode, type Project } from "@/lib/types/database";
 
@@ -100,7 +99,13 @@ const PANEL_TABS: PanelTab[] = [
 const comingSoon = (what: string, session: number) =>
   toast.info(`${what} is coming in Session ${session}.`, { description: "Stubbed in the Session 1 shell." });
 
-export function Workspace({ project }: { project: WorkspaceProject }) {
+export function Workspace({
+  project,
+  initialMessages,
+}: {
+  project: WorkspaceProject;
+  initialMessages: ArchitectUIMessage[];
+}) {
   const [mode, setOptimisticMode] = useOptimistic<AppMode>(project.mode);
   const [, startTransition] = useTransition();
   const [modelId, setModelId] = useState<string>(DEFAULT_MODEL_ID);
@@ -181,7 +186,12 @@ export function Workspace({ project }: { project: WorkspaceProject }) {
 
       {/* ── Body: chat | panels ─────────────────────────────────────────────────── */}
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <ChatPanel project={project} modelLabel={model.label} />
+        <ChatPanel
+          projectId={project.id}
+          projectDescription={project.description}
+          modelId={model.id}
+          initialMessages={initialMessages}
+        />
 
         <Tabs defaultValue="preview" className="flex min-h-0 flex-1 flex-col gap-0 border-t md:border-t-0 md:border-l">
           <div className="border-b px-3 py-2">
@@ -206,55 +216,5 @@ export function Workspace({ project }: { project: WorkspaceProject }) {
         </Tabs>
       </div>
     </div>
-  );
-}
-
-function ChatPanel({ project, modelLabel }: { project: WorkspaceProject; modelLabel: string }) {
-  const [draft, setDraft] = useState("");
-
-  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!draft.trim()) return;
-    comingSoon("Streaming chat", 2);
-  };
-
-  return (
-    <section aria-label="Chat" className="flex min-h-0 w-full flex-col md:w-[400px] md:shrink-0">
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-4 p-4">
-          <div className="rounded-lg bg-muted p-3 text-sm">
-            <p className="font-medium">Hi! I&apos;m Architect.</p>
-            <p className="mt-1 text-muted-foreground">
-              {project.description
-                ? `Let's build: “${project.description}”. Tell me more about who will use it.`
-                : "Describe the agent you want and I'll plan it, write the files and show you a preview."}
-            </p>
-          </div>
-        </div>
-      </ScrollArea>
-      <form onSubmit={onSubmit} className="border-t p-3">
-        <div className="rounded-lg border bg-card p-1.5 focus-within:ring-2 focus-within:ring-ring/50">
-          <Textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                e.currentTarget.form?.requestSubmit();
-              }
-            }}
-            rows={2}
-            placeholder="Ask Architect to build or change something…"
-            className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
-          />
-          <div className="flex items-center justify-between px-1.5">
-            <span className="text-xs text-muted-foreground">{modelLabel}</span>
-            <Button type="submit" size="icon" className="size-7" aria-label="Send">
-              <ArrowUpIcon className="size-3.5" />
-            </Button>
-          </div>
-        </div>
-      </form>
-    </section>
   );
 }

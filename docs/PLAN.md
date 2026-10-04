@@ -340,6 +340,7 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-04 | Start building (before the rough UI arrives) | Google sign-in, streaming chat + model switcher + token cap, MemoryProvider (Memori) with cross-project recall, recall dropdown, per-turn usage ledger | ✅ built (needs Supabase + an LLM key to run end to end) |
 | 2026-10-04 | Memory recall as a **dropdown** under each reply | §3.2 | ✅ |
 | 2026-10-04 | Google sign-in | row 01 | 🔨 building |
 | 2026-10-04 | CMS like WordPress | row 22 | 🟡 proposed scope |
