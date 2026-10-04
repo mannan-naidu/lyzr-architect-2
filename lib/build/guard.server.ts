@@ -48,10 +48,21 @@ export async function requireProject(projectId: string): Promise<GuardedProject 
   return { user, supabase, project };
 }
 
-/** Per-user rolling 24h token cap (lower for demo guests). Returns an error response or null. */
-export async function checkTokenCap({ user, supabase }: Pick<GuardedProject, "user" | "supabase">) {
+/**
+ * Per-user rolling 24h token cap (lower for demo guests). Returns an error response or null.
+ * Fair billing: the user's budget counts only tokens billed to the user. Self-fixes draw from a
+ * separate agent budget of the same size, so a broken build never eats into the user's allowance.
+ */
+export async function checkTokenCap(
+  { user, supabase }: Pick<GuardedProject, "user" | "supabase">,
+  billedTo: "user" | "agent" = "user",
+) {
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const { data } = await supabase.from("messages").select("tokens_in, tokens_out").gte("created_at", since);
+  const { data } = await supabase
+    .from("messages")
+    .select("tokens_in, tokens_out")
+    .eq("billed_to", billedTo)
+    .gte("created_at", since);
   const used = (data ?? []).reduce((sum, r) => sum + (r.tokens_in ?? 0) + (r.tokens_out ?? 0), 0);
   const { DAILY_TOKEN_CAP, DEMO_TOKEN_CAP } = llmEnv();
   const cap = user.isAnonymous ? DEMO_TOKEN_CAP : DAILY_TOKEN_CAP;

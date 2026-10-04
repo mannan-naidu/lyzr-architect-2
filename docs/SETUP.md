@@ -93,6 +93,13 @@ Or paste `supabase/migrations/*.sql` into **SQL Editor → New query → Run**.
 - [ ] (Optional) Memori: https://app.memorilabs.ai → API key → `MEMORI_API_KEY` (raises
       augmentation rate limits; required for Memori Cloud mode)
 
+## 4b. GitHub push key
+
+`GITHUB_TOKEN_KEY` encrypts users' GitHub tokens at rest. Generate one with
+`openssl rand -base64 32` and add it to Vercel's environment variables. Without it, a key is
+derived from `SUPABASE_SERVICE_ROLE_KEY`; this works, but rotating that key then invalidates
+stored tokens, and users have to reconnect GitHub.
+
 ## 5. Import the repo into Vercel
 
 - [ ] https://vercel.com/new → **Import Git Repository** → `mannan-naidu/lyzr-architect-2`.

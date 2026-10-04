@@ -9,7 +9,9 @@ project decisions, preferences and past fixes across sessions. Users can also gi
 build their own memory, and a Memory panel shows exactly what is stored so they can edit or delete
 it. It's built for Lyzr's TPM assignment and extends architect.new.
 
-→ **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) · **Decisions:** [docs/decisions.md](docs/decisions.md) · **Setup:** [docs/SETUP.md](docs/SETUP.md)
+![Architecture](docs/architecture/architecture.png)
+
+→ **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) · **Submission:** [SUBMISSION.md](SUBMISSION.md) · **Decisions:** [docs/decisions.md](docs/decisions.md) · **Setup:** [docs/SETUP.md](docs/SETUP.md)
 
 ## Design principles
 
@@ -30,18 +32,22 @@ it. It's built for Lyzr's TPM assignment and extends architect.new.
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Auth (GitHub via Supabase) | ✅ Real | Session cookies via `@supabase/ssr`, route guard in `proxy.ts` |
+| Auth | ✅ Real | Supabase: GitHub, Google, anonymous demo mode; `proxy.ts` refreshes the session |
 | Database | ✅ Real | Supabase Postgres, RLS owner-only on every table |
-| LLM chat | ✅ Real | Vercel AI SDK; Anthropic / OpenAI / Google / OpenRouter |
-| Memory (Memori) | ✅ Real | BYODB in the `memori` schema; Memory panel to view/edit/delete |
-| Live preview | ✅ Real | Sandpack (in-browser bundler) |
-| GitHub push | ✅ Real | Octokit, push generated project to a new repo |
-| Code sandbox (E2B) | 🟡 Simulated | UI + logs shaped like E2B; no remote VM |
-| Multi-framework agent runs | 🟡 Simulated | LangGraph / CrewAI / OpenAI Agents templates generate code; runs are simulated |
-| Deploy logs | 🟡 Simulated | Streamed, realistic logs; Vercel API if time allows |
+| Chat | ✅ Real | Vercel AI SDK, 5 providers (Anthropic, OpenAI, Google, Groq, OpenRouter), parallel prompts |
+| Plan → build | ✅ Real | Typed plan (structured output), approve, streamed file generation |
+| Live preview | ✅ Real | Sandpack (in-browser bundler) with error capture |
+| Fix memory + loop breaker | ✅ Real | Error signatures across projects, 3-try limit, rollback, self-fixes billed to the agent |
+| Builder memory | ✅ Real | Memori in the `memori` schema; Memory tab lists, edits, deletes and forgets |
+| Decision log, ledger, trace, diffs | ✅ Real | `decisions`, `messages`, `run_events`, `project_files.previous_content` |
+| Agents | ✅ Real (code) / 🟡 Simulated (runs) | Code generated for Lyzr, LangGraph, CrewAI, OpenAI Agents SDK, TS; preview runs via `/agents.ts` simulator |
+| GitHub push | ✅ Real | Octokit, one commit per push; token AES-256-GCM encrypted |
+| Security check, SEO/GEO | ✅ Real | Deterministic checks; generated meta, sitemap, robots, JSON-LD, `llms.txt` |
+| CMS + WordPress import | ✅ Real | `cms_entries`; public WordPress REST API |
+| Hosting user apps | 🟡 Simulated | Logs, URL and history are recorded; Vercel API is the production design |
+| E2B sandboxes | 🟡 Simulated | Designed in ARCHITECTURE.md §6; Sandpack runs the UI today |
 
-> Session 1 status: auth, DB schema and app shell are in place. Chat, preview, Memory panel,
-> GitHub and deploy land in later sessions (see `CLAUDE.md` → Scope guard).
+Submission answers and the deploy checklist: [SUBMISSION.md](SUBMISSION.md).
 
 ## Local setup
 
@@ -52,7 +58,7 @@ Prerequisites: Node 20.19+ (22 recommended), pnpm 10, a Supabase project (see
 pnpm install
 cp .env.example .env.local        # fill in real values
 pnpm dlx supabase link --project-ref <your-ref>
-pnpm db:migrate                   # applies supabase/migrations
+pnpm db:migrate                   # or paste supabase/setup.sql into the SQL Editor
 pnpm dev                          # http://localhost:3000
 ```
 

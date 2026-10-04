@@ -85,6 +85,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
   const { data: usageRows } = await supabase
     .from("messages")
     .select("tokens_in, tokens_out")
+    .eq("billed_to", "user")
     .gte("created_at", since);
   const usedToday = (usageRows ?? []).reduce(
     (sum, r) => sum + (r.tokens_in ?? 0) + (r.tokens_out ?? 0),

@@ -38,7 +38,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return jsonError(400, "Invalid request body.", "bad_request");
-  const capped = await checkTokenCap(guard);
+  const capped = await checkTokenCap(guard, "agent");
   if (capped) return capped;
 
   const { error: errorText } = parsed.data;

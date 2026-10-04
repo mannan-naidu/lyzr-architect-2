@@ -342,6 +342,7 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-05 | "Build everything except Vercel; I'll host tomorrow" | Workspace: plan → build → preview → fix memory/loop breaker; Memory tab (memories, decisions, fixes, billing ledger); Agents (graph, memory toggle, 5 framework targets); Ship (security, SEO/GEO, deploy, GitHub push); Content (CMS + WordPress import); Pro logs/trace; ARCHITECTURE.md + diagram; SUBMISSION.md | ✅ built; deploy checklist in SUBMISSION.md |
 | 2026-10-05 | UI theme after **rig.ai**; keep the generic vibe-coding flow (low learning curve); **quick tour** at start; mention both in the submission | theme tokens + landing/login/dashboard/workspace restyle; `components/product-tour.tsx`; README "Design principles" | ✅ built |
 | 2026-10-05 | **Parallel prompts** "the Claude way": send new prompts while earlier ones run, each streams independently without interrupting | chat panel | ✅ built |
 | 2026-10-05 | **Demo mode** (no account) | Supabase anonymous sign-in + seeded project + lower token cap | ✅ built (enable anonymous sign-ins in Supabase) |
