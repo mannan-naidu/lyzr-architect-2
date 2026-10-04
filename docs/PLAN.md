@@ -67,6 +67,11 @@ From docs.architect.new and the production bundles:
 
 ## 3. Our product thesis
 
+> ⚠️ **Under revision (2026-10-04):** research found that 11+ other candidates already pitch
+> "two modes, one project", so that part is table stakes. The proposed new lead is "Architect
+> remembers, so you never pay for the same mistake twice". See `docs/RESEARCH.md` §4; the owner
+> decision is pending.
+
 **"One project, two lenses, and Architect remembers."**
 
 - **Two lenses on the same project, not two products.**
