@@ -145,8 +145,7 @@ There are two independent axes:
 
 | Surface | What the user sees |
 | --- | --- |
-| **Inline recall chips** in chat | "🧠 Recalled 3: prefers Tailwind · uses Supabase auth · last fix for CORS" (click to see each, with its source) |
-| **"Learned" toast after a turn** | "Learned 2 things: *app is for HR managers*, *dense layout*. [Review] [Undo]" |
+| **Recall dropdown** in each reply (owner choice) | A collapsed row, "🧠 Recalled 3 · Learned 2 ▾", under each assistant message. Expanding it lists each recalled memory (text, scope, source, *why it matched*) and each newly learned fact with inline **Keep / Edit / Forget**. Collapsed by default so chat stays clean. |
 | **"Why?" on any step or diff** | Which memories, plan items and messages led to this change (provenance) |
 | **Memory panel** | Tabs for **You** (cross-project), **This project** (decisions, fixes) and **Agents** (end-user memories of the agents you built). Each fact shows text, scope, source message, date, and times used, with edit, delete, pin and "never remember this" controls. |
 | **Controls** | Global memory on/off, incognito session, forget project, export JSON, and a privacy note (Memori's augmentation is a hosted API) |
@@ -187,7 +186,7 @@ Legend: **R** = real (works end to end) · **P** = partly real · **S** = simula
 
 | # | Flow | What the user sees | Real? | Session |
 | - | --- | --- | --- | --- |
-| 01 | **Auth** | GitHub sign-in (Supabase), profile auto-created, sign out | R ✅ | 1 |
+| 01 | **Auth** | GitHub + **Google** sign-in (Supabase), profile auto-created, sign out | R ✅ | 1–2 |
 | 02 | **Homepage / new project** | Hero prompt box with **+** (attach file, template, import repo, pick framework and model), recent projects, "Architect remembers: Next.js, Tailwind, Claude" chips | P | 2 / 7 |
 | 03 | **Planning** | Guided questions, then a live PRD (overview, user stories, **agent table**, data sources) and "Approve plan → Build". Memory pre-fills answers. | R (LLM) | 2 |
 | 04 | **Chat window** | Streaming chat, model picker, Plan/Build toggle, token/cost meter, step cards ("Recalled 3 memories", "Wrote 4 files") | R | 2 |
@@ -206,6 +205,8 @@ Legend: **R** = real (works end to end) · **P** = partly real · **S** = simula
 | 18 | **Decision log + "Why?"** | Decision timeline linked to diffs; provenance popover on any step | R | 4 |
 | 19 | **SEO/GEO toggle** | Toggle in project settings, generated meta/JSON-LD/sitemap/llms.txt, score card in Deploy | P | 6–7 |
 | 20 | **Security pre-deploy check** | Scan for tables without RLS, exposed keys, secrets in client code; plain-language findings | P | 6 |
+| 22 | **Content (CMS) mode** | For public sites: built-in content collections (pages, posts, FAQs) generated from the site, edited by non-technical users in a WYSIWYG editor with draft/publish; **Connect WordPress** (headless via WP REST/WPGraphQL) or **import from WordPress**; feeds the SEO/GEO toggle | P (built-in R, WordPress S) | 7 |
+| 23 | **Hybrid / local bridge** | `architect` CLI: `pull`, `dev` (run locally), `push` (sync back), plus an MCP server so Cursor/Claude Code can drive the same project; cloud sandbox by default, local when you want | S (design) / P | 8 |
 | 21 | *Stretch* | Testing agent, environment-variables panel, share/collaborators, marketplace | S | if time |
 
 **Explicitly out of scope:** billing/credits, orgs/teams, marketplace earnings, design-system
@@ -339,6 +340,12 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-04 | Memory recall as a **dropdown** under each reply | §3.2 | ✅ |
+| 2026-10-04 | Google sign-in | row 01 | 🔨 building |
+| 2026-10-04 | CMS like WordPress | row 22 | 🟡 proposed scope |
+| 2026-10-04 | Hybrid cloud/local (inspired by Claude Code's teleport/remote) | row 23 | 🟡 proposed |
+| 2026-10-04 | List all competitor features | `docs/COMPETITORS.md` | ✅ |
+| 2026-10-04 | Owner will share a rough UI; build features to be UI-agnostic until then | §6 | ✅ noted |
 | 2026-10-04 | Adopt "Architect remembers, so you never pay for the same mistake twice", and keep it evolving with every new idea | §3 | ✅ adopted |
 | 2026-10-04 | Mention Cognis, but build on Memori because it fits our TypeScript/Postgres architecture | §3, §5.10, ADR-004 | ✅ |
 | 2026-10-04 | Submission lists unique features first and shared ones last | §8 | ✅ |

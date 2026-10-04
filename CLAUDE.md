@@ -58,7 +58,7 @@ lib/
 proxy.ts                   # Next 16 "middleware" — refreshes session, guards app routes
 supabase/migrations/       # SQL migrations (source of truth for schema + RLS)
 scripts/                   # one-off scripts (e.g. memori-spike.ts)
-docs/                      # PLAN.md (scope + sessions + owner notes log), RESEARCH.md (market, competitors, hosting), EXPLORATION.md (manual platform tour), decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
+docs/                      # PLAN.md (scope + sessions + owner notes log), RESEARCH.md (market, competitors, hosting), EXPLORATION.md (manual platform tour), COMPETITORS.md (rival submissions), decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
 ARCHITECTURE.md            # the graded architecture write-up
 ```
 
