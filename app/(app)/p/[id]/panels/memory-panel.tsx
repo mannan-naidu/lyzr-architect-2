@@ -114,9 +114,13 @@ function MemoryList() {
 
   useEffect(() => {
     let live = true;
-    void listMemories({ projectId: project.id }).then((result) => {
-      if (live) setState("error" in result ? { phase: "error", message: result.error } : { phase: "ready", ...result });
-    });
+    listMemories({ projectId: project.id })
+      .then((result) => {
+        if (live) setState("error" in result ? { phase: "error", message: result.error } : { phase: "ready", ...result });
+      })
+      .catch(() => {
+        if (live) setState({ phase: "error", message: "Couldn't load memories right now." });
+      });
     return () => {
       live = false;
     };

@@ -153,9 +153,11 @@ function SeoFilesPreview() {
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    void previewSeoFiles({ projectId: project.id }).then((r) => {
-      if (live && "files" in r) setFiles(r.files ?? null);
-    });
+    previewSeoFiles({ projectId: project.id })
+      .then((r) => {
+        if (live && "files" in r) setFiles(r.files ?? null);
+      })
+      .catch(() => undefined);
     return () => {
       live = false;
     };
@@ -189,9 +191,11 @@ function DeployCard({ findings }: { findings: SecurityFinding[] }) {
 
   useEffect(() => {
     let live = true;
-    void listDeployments({ projectId: project.id }).then((r) => {
-      if (live && "deployments" in r && r.deployments) setHistory(r.deployments);
-    });
+    listDeployments({ projectId: project.id })
+      .then((r) => {
+        if (live && "deployments" in r && r.deployments) setHistory(r.deployments);
+      })
+      .catch(() => undefined);
     return () => {
       live = false;
     };
@@ -292,9 +296,13 @@ function GitHubCard() {
 
   useEffect(() => {
     let live = true;
-    void getGitHubStatus({ projectId: project.id }).then((s) => {
-      if (live) setStatus(s);
-    });
+    getGitHubStatus({ projectId: project.id })
+      .then((s) => {
+        if (live) setStatus(s);
+      })
+      .catch(() => {
+        if (live) setStatus({ connected: false, login: null, repo: null });
+      });
     return () => {
       live = false;
     };

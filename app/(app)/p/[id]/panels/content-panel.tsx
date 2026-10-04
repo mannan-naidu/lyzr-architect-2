@@ -41,9 +41,13 @@ export function ContentPanel() {
 
   useEffect(() => {
     let live = true;
-    void listCmsEntries({ projectId: project.id }).then((r) => {
-      if (live && "entries" in r) setEntries(r.entries);
-    });
+    listCmsEntries({ projectId: project.id })
+      .then((r) => {
+        if (live) setEntries("entries" in r ? r.entries : []);
+      })
+      .catch(() => {
+        if (live) setEntries([]);
+      });
     return () => {
       live = false;
     };
