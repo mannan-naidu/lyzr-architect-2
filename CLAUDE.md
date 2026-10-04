@@ -6,7 +6,7 @@
 assignment (brief: https://hiring.lyzrarchitect.space/). It extends architect.new and serves both
 non-technical users and developers.
 
-**Angle: "Architect remembers."** Persistent memory via **Memori** (Postgres-based, open source). The
+**Angle: "Architect remembers, so you never pay for the same mistake twice."** Persistent memory via **Memori** (Postgres-based, open source; Lyzr Cognis named for production, ADR-004). The
 builder agent remembers each user's project decisions, preferences and past fixes across sessions.
 Users can toggle memory on for the agents they build. A Memory panel shows what is stored and lets
 users edit or delete it.
@@ -58,7 +58,7 @@ lib/
 proxy.ts                   # Next 16 "middleware" — refreshes session, guards app routes
 supabase/migrations/       # SQL migrations (source of truth for schema + RLS)
 scripts/                   # one-off scripts (e.g. memori-spike.ts)
-docs/                      # PLAN.md (scope + sessions), RESEARCH.md (market + competitors), decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
+docs/                      # PLAN.md (scope + sessions + owner notes log), RESEARCH.md (market, competitors, hosting), EXPLORATION.md (manual platform tour), decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
 ARCHITECTURE.md            # the graded architecture write-up
 ```
 

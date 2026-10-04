@@ -79,3 +79,39 @@ Memori Cloud (`MEMORI_API_KEY`) is the fallback if BYODB can't run in our server
   memories must be handled by us (filter or prompt design).
 - ⚠️ Memori intercepts the raw provider SDKs (Anthropic, OpenAI, Google), **not the Vercel AI SDK**.
   We'll call `recall()` manually and inject context ourselves in the AI SDK pipeline.
+
+---
+
+## ADR-004 — Memori behind a pluggable MemoryProvider; Cognis named for production
+
+- **Date:** 2026-10-04
+- **Status:** Accepted
+
+**Context.** Lyzr ships its own memory layer, Cognis (MIT open source + hosted). It's
+benchmark-leading, has full CRUD and is native to Lyzr Studio agents, but it's Python-only. Memori
+has a TypeScript SDK, runs on our own Supabase Postgres, and is verified end to end in our spike.
+
+**Decision.** Use Memori in the prototype. Define a `MemoryProvider` interface (`recall`, `save`,
+`list`, `update`, `delete`, `forgetScope`) so the harness and the Memory panel never depend on
+Memori directly. Name Lyzr Cognis (via a Python sidecar or the hosted Lyzr API) as the production
+provider when Architect runs inside the Lyzr ecosystem.
+
+**Consequences.**
+- ✅ No new runtime (Python) in the prototype; memory lives next to our data.
+- ✅ The architecture shows awareness of and a path to Lyzr's own product.
+- ⚠️ The Memory panel's list/edit/delete goes through SQL on the `memori_*` tables for Memori;
+  Cognis would use its API instead.
+
+---
+
+## ADR-005 — Product thesis: "Architect remembers, so you never pay for the same mistake twice"
+
+- **Date:** 2026-10-04
+- **Status:** Accepted (evolves with owner input; see PLAN.md §10)
+
+**Context.** Research (RESEARCH.md): the top complaint across vibe-coding tools is paying for the
+AI's own mistakes and doom loops; 11+ rival submissions already lead with "two modes, one project".
+
+**Decision.** Lead with memory-powered features (fix memory and loop breaker, fair-billing ledger,
+builder memory and decision log, visible memory, agent memory toggle, SEO/GEO toggle). The Simple/Pro
+lenses and other shared features are presented last.

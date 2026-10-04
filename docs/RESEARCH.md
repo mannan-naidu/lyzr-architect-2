@@ -170,3 +170,44 @@ Memory becomes the engine behind fixes to the top three complaints, not a side p
 - **Dev/prod data separation** and one-click restore (the lesson from Replit's database wipe).
 - **Portable by design:** "Runs without Architect" badge, standard Next.js + Supabase output,
   export that actually runs.
+
+---
+
+## 5. Memori vs Lyzr Cognis
+
+| | **Memori** (MemoriLabs, Apache-2.0) | **Lyzr Cognis** (Lyzr, MIT open source + hosted) |
+| --- | --- | --- |
+| Integration model | **Interceptor**: wraps your LLM client (OpenAI/Anthropic/Gemini SDK) and injects recalled facts into the prompt automatically; manual `recall()` also available | **Explicit API**: you call `add` / `search` / `get_context` / `delete` yourself (and it's native in Lyzr Studio agents) |
+| Languages | **TypeScript** and Python SDKs | **Python only** (open-source `lyzr-cognis`; hosted via Python `lyzr-adk`) |
+| Storage | **Your own SQL DB** (Postgres/MySQL/SQLite via `pg`, etc.), created as `memori_*` tables, so it runs in our Supabase in a `memori` schema | Open source: local SQLite + Qdrant files. Hosted: MongoDB + Qdrant + Neo4j + OpenSearch (managed). |
+| Fact extraction | Memori's hosted "Advanced Augmentation" API (conversation text leaves your infra; IDs hashed) | Your own LLM keys (OSS: Gemini + OpenAI) or Lyzr's hosted service |
+| Retrieval | Local embeddings (ONNX all-MiniLM, about 87 MB) + hybrid dense/lexical search | Hybrid: 256D vector shortlist → 768D rerank + BM25, fused with RRF; under 300 ms; #1 on LongMemEval SS-User |
+| Scoping | entity (user) + process (agent/app) + session; **recall filters by entity only** | owner_id + agent_id + session_id; 13 long-term categories; auto ADD/UPDATE/DELETE dedup |
+| CRUD for a Memory panel | No list/update/delete API, so we read and write the `memori_*` tables directly (SQL) | add, get/list, search, delete, clear (+ update and summaries in hosted) |
+| Fit for us | ✅ TypeScript, same Postgres, verified in our spike | ⚠️ needs a Python sidecar or Lyzr hosted key, but it's Lyzr's own product |
+
+**Decision:** Memori in the prototype, behind a `MemoryProvider` interface; Cognis is named as the
+production provider when Architect runs inside the Lyzr ecosystem (ADR-004).
+
+Sources: [Memori repo](https://github.com/MemoriLabs/Memori) · [Cognis](https://www.lyzr.ai/cognis/) ·
+[Cognis hosted vs OSS](https://docs.lyzr.ai/cognis/comparison) · `docs/memori-spike.md`
+
+---
+
+## 6. Where Lyzr hosts Architect (observed 2026-10-04 from DNS and HTTP headers)
+
+| Piece | Host | Evidence |
+| --- | --- | --- |
+| architect.new web app (Next.js) | **Vercel** (edge `iad1`, US-East) | `server: Vercel`, `x-vercel-id: iad1::…`, `vercel-dns-016.com` |
+| Assignment site hiring.lyzrarchitect.space | **Vercel** | `server: Vercel` |
+| docs.architect.new | **Mintlify** on Vercel, behind Cloudflare | `cname.mintlify-dns.com`, `cf-ray` |
+| Backend API api.beta.architect.new | **AWS** (us-east-1 EC2/ELB IPs), **Python / uvicorn** (FastAPI) | `server: uvicorn`, 44.x / 13.x AWS IPs |
+| Lyzr agent runtime agent-prod.studio.lyzr.ai | **AWS**, Python / uvicorn | same pattern |
+| Lyzr Studio frontend studio.lyzr.ai | **AWS S3 + CloudFront** | `server: AmazonS3`, `via: CloudFront` |
+| User app sandboxes and previews | **E2B** (Firecracker microVMs) | `NEXT_PUBLIC_E2B_TEMPLATE_ID`, `sandboxId` in the bundle |
+| Deployed user apps | `*.architect.new` subdomains (renamable). In v2.2 the code lives in a platform-managed GitHub repo, so it's very likely built and served on Vercel; unconfirmed. | docs and changelog |
+| Analytics, ops | PostHog, Mixpanel, Sentry, OneSignal, Stripe, hCaptcha, Memberstack | URLs in the bundle |
+
+**Takeaway for ARCHITECTURE.md:** Lyzr already runs the same shape we propose: Vercel for the web
+app, a Python agent backend on AWS, E2B sandboxes. That validates our choices, and we can show we
+know their stack.

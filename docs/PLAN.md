@@ -65,34 +65,119 @@ From docs.architect.new and the production bundles:
 
 ---
 
-## 3. Our product thesis
+## 3. Our product thesis (adopted 2026-10-04)
 
-> ⚠️ **Under revision (2026-10-04):** research found that 11+ other candidates already pitch
-> "two modes, one project", so that part is table stakes. The proposed new lead is "Architect
-> remembers, so you never pay for the same mistake twice". See `docs/RESEARCH.md` §4; the owner
-> decision is pending.
+> **"Architect remembers, so you never pay for the same mistake twice."**
 
-**"One project, two lenses, and Architect remembers."**
+Research (`docs/RESEARCH.md`) showed two things:
+- The #1 complaint on every vibe-coding platform is paying for the AI's own mistakes. Doom loops
+  repeat fixes that already failed, and context is lost after about 30 messages.
+- 11+ rival submissions already pitch "two modes, one project", and none of them leads with memory.
 
-- **Two lenses on the same project, not two products.**
-  - **Simple** is a conversation, a live preview and plain-language status ("Building your dashboard…").
-  - **Pro** is the same project with the file tree, diffs, terminal/logs, the agent trace, the model per step, and the framework code.
-  - Switching never loses state. A non-technical founder can hand the project to an engineer, who just flips to Pro.
-- **Framework-agnostic agents.**
-  - The agent spec (role, tools, memory, model) is framework-neutral, and **compiles** to Lyzr, LangGraph, CrewAI, OpenAI Agents SDK or plain TypeScript.
-  - Pro users can edit the generated framework code. Simple users never see it.
-- **Model-agnostic everywhere.** The builder and each generated agent can use Claude, GPT, Gemini or open-source models via OpenRouter, with bring-your-own-key and per-step routing.
-- **Architect remembers** (our differentiator; Memori on Postgres):
-  - *Builder memory* (per user, across projects): stack and style preferences, past decisions, and fixes that worked. For example, "You used Tailwind and Supabase last time — same here?" or "This error matches one we fixed on 12 Sep."
-  - *Agent memory* (per generated agent, opt-in toggle): the agents you build remember their own end users.
-  - A **Memory panel** shows every stored fact with its source and date, plus edit, delete and "forget this project". It's transparent and user-owned, the opposite of a black box.
+So **memory is the engine** behind our answers to the top complaints, and the two lenses are table
+stakes.
+
+**Pillars, in the order we present them:**
+1. **Fix memory and a loop breaker.**
+   - Every error → attempted fix → outcome is remembered.
+   - Before fixing, the harness recalls "tried X, failed; Y worked last time".
+   - After 3 failed attempts it stops, rolls back to the last good checkpoint, and asks one
+     clarifying question.
+2. **Fair-billing ledger.**
+   - Each step is tagged *you asked* vs *agent self-fix*, and self-fixes are free.
+   - A cost preview before each build, a per-task budget cap, and tokens and cost shown on every
+     step card.
+3. **Builder memory and a decision log** (per user, across projects).
+   - Stack and style preferences plus project decisions ("Auth: Supabase · Never store tokens in
+     localStorage") are injected every turn, so context isn't lost after 30 messages.
+   - New projects start pre-filled ("Same as last time: Next.js, Tailwind, Claude?").
+4. **Visible memory.**
+   - Nothing is hidden: inline "recalled" chips, a "why did you do that?" view, and a review of
+     what was just learned.
+   - The Memory panel lets you edit, delete, pin, use incognito, forget a project, and export
+     (see §3.2).
+5. **Agent memory toggle** on every agent you build, using Lyzr's three-tier model (short-term,
+   long-term, session), so it maps 1:1 onto Lyzr Cognis when deployed on Lyzr.
+6. **SEO/GEO toggle** for public-facing apps (see §3.3).
+7. *Table stakes, presented last:* Simple/Pro lenses on one project, plan-before-build, framework-
+   and model-agnostic agents, GitHub, deploy, a security pre-check, and click-to-edit.
+
+**Memory provider:** **Memori** in the prototype (TypeScript SDK, runs on our own Supabase
+Postgres, verified in `docs/memori-spike.md`). ARCHITECTURE.md describes a **pluggable memory
+interface**, with **Lyzr Cognis** named as the production provider inside the Lyzr ecosystem.
 
 **Answers for the submission form (draft):**
-- *Non-technical user vs Replit, Lovable or Emergent:* it builds **agents**, not just CRUD screens. It plans with you before building, shows progress in plain language, and **remembers you**, so the tenth app takes a sentence rather than an essay. You can also see and delete everything it knows.
+- *Non-technical user vs Replit, Lovable or Emergent:*
+  - Those tools charge you when *their* agent breaks your app, and they forget what they already
+    tried. Architect remembers every fix, never repeats a failed one, and doesn't bill you for its
+    own mistakes.
+  - It also remembers how *you* build, so the tenth app takes a sentence, and you can see and edit
+    everything it knows.
+  - It builds AI **agents**, not just screens.
 - *Technical user vs Claude Code, Codex or Cursor:*
-  - It's the same agent loop, with a hosted sandbox, live preview, deploy and GitHub PRs included, and no local setup.
-  - You pick the agent **framework and model**, read diffs and the agent trace, and own the code in your repo.
-  - Project memory persists across sessions and teammates instead of living in one terminal.
+  - Memory there is per repo and manual (rules files). Here it's cross-project, automatic, and
+    inspectable down to which memory drove which diff.
+  - You get the same agent loop with a hosted sandbox, preview, deploy and PRs, any framework and
+    any model, and a per-step token/cost trace.
+
+### 3.1 How "agent-agnostic" works
+
+There are two independent axes:
+- **Framework-agnostic:**
+  - The plan produces a neutral **AgentSpec**, a JSON/zod schema of agents (role, instructions,
+    model, tools, knowledge, memory, guardrails) plus a graph of hand-offs.
+  - **Adapters compile** the spec into Lyzr Studio config, LangGraph, CrewAI, OpenAI Agents SDK or
+    plain TypeScript.
+  - The UI (agent graph, config forms) edits the spec, never framework code. Pro users can edit the
+    generated code, and a reverse-sync flags drift.
+  - At runtime each framework runs inside the sandbox behind one HTTP contract
+    (`POST /agents/{id}/run` with a streaming event schema), so the app UI never cares which
+    framework is underneath.
+- **Model-agnostic:**
+  - A model gateway (Vercel AI SDK provider registry) sits behind one interface.
+  - A capability matrix (tool calling, context, vision, structured output, price) drives per-step
+    routing.
+  - Tool calls and streaming are normalized, and fallbacks kick in on errors or refusals.
+  - Bring-your-own key and per-user budgets are supported.
+- In the prototype the AgentSpec and generated code are real, and the framework runs are simulated.
+
+### 3.2 How memory is made visible (UX)
+
+| Surface | What the user sees |
+| --- | --- |
+| **Inline recall chips** in chat | "🧠 Recalled 3: prefers Tailwind · uses Supabase auth · last fix for CORS" (click to see each, with its source) |
+| **"Learned" toast after a turn** | "Learned 2 things: *app is for HR managers*, *dense layout*. [Review] [Undo]" |
+| **"Why?" on any step or diff** | Which memories, plan items and messages led to this change (provenance) |
+| **Memory panel** | Tabs for **You** (cross-project), **This project** (decisions, fixes) and **Agents** (end-user memories of the agents you built). Each fact shows text, scope, source message, date, and times used, with edit, delete, pin and "never remember this" controls. |
+| **Controls** | Global memory on/off, incognito session, forget project, export JSON, and a privacy note (Memori's augmentation is a hosted API) |
+| **Decision log** | A timeline of decisions, each linked to the diff that implemented it |
+
+### 3.3 SEO/GEO toggle (scope under discussion)
+
+A per-project toggle for apps with **public pages** (landing pages, docs, marketing sites). Apps
+behind a login don't benefit. *GEO* means "generative engine optimization": being cited by
+ChatGPT, Perplexity, Google AI Overviews and similar.
+
+- **Technical (automatic when the toggle is on):**
+  - Server-side or static rendering for public routes, since a client-only SPA is invisible to many
+    crawlers.
+  - Semantic HTML.
+  - `<title>`, meta description, canonical tags, Open Graph and Twitter cards.
+  - `sitemap.xml` and `robots.txt`, with explicit allow/deny rules for AI crawlers (GPTBot,
+    PerplexityBot, Google-Extended…).
+  - **schema.org JSON-LD** (Organization, Product, FAQPage, Article, BreadcrumbList).
+  - **`llms.txt`** summary.
+  - Image alt text, Core Web Vitals budget, language/hreflang.
+- **Non-technical (assisted content):**
+  - Keyword and intent brief from the app description, and title/description suggestions.
+  - An auto-generated **FAQ section**, written answer-first for AI citation.
+  - Clear entity statements (who, what, where), facts with sources, readability score, and
+    E-E-A-T prompts (author, about page).
+- **Score and report:** an SEO/GEO score card in the Deploy step with fix-it buttons.
+- **Memory tie-in:** brand voice, target keywords and audience are remembered across projects.
+- **Prototype:** the toggle, generated meta, JSON-LD, sitemap, robots, llms.txt and the score card
+  are real (deterministic checks plus an LLM for copy). Crawler and AI-citation tracking are
+  simulated.
 
 ---
 
@@ -116,7 +201,12 @@ Legend: **R** = real (works end to end) · **P** = partly real · **S** = simula
 | 12 | **Pro mode** | File tree, Monaco code view, **diff per step** (accept/revert), terminal/logs, **agent trace** (plan → tool calls → files, tokens and cost per step) | P | 6 |
 | 13 | **Settings** | Models and BYOK keys, default framework, memory on/off and export, usage | P | 7 |
 | 14 | **Templates and onboarding** | Template gallery (support agent, research crew, RAG assistant…), first-run "what do you build?" which seeds memory | S/R | 7 |
-| 15 | *Stretch* | Testing agent, environment-variables panel, share/collaborators, marketplace | S | if time |
+| 16 | **Fix memory + loop breaker** | "Tried this before" card, attempt counter (1/3), auto-rollback, one clarifying question | R | 3–4 |
+| 17 | **Fair-billing ledger** | Cost preview before build, per-step tokens/cost, "self-fix: free" tags, budget cap | P (metering R, billing S) | 2 / 6 |
+| 18 | **Decision log + "Why?"** | Decision timeline linked to diffs; provenance popover on any step | R | 4 |
+| 19 | **SEO/GEO toggle** | Toggle in project settings, generated meta/JSON-LD/sitemap/llms.txt, score card in Deploy | P | 6–7 |
+| 20 | **Security pre-deploy check** | Scan for tables without RLS, exposed keys, secrets in client code; plain-language findings | P | 6 |
+| 21 | *Stretch* | Testing agent, environment-variables panel, share/collaborators, marketplace | S | if time |
 
 **Explicitly out of scope:** billing/credits, orgs/teams, marketplace earnings, design-system
 import, and real per-app sandboxes. We mention them in ARCHITECTURE.md as the production design.
@@ -174,7 +264,8 @@ talks to its neighbours:
    - Postgres pooling and read replicas, LLM rate-limit pooling across keys and providers, and
      backpressure.
    - A cost model (sandbox minutes and tokens per build), and failure modes.
-10. **Memory layer (Memori).** Builder memory vs agent memory, attribution, recall and save points
+10. **Memory layer: a pluggable `MemoryProvider` interface** (Memori in the prototype, Lyzr Cognis in
+    production inside the Lyzr ecosystem). Builder memory vs agent memory, fix memory, attribution, recall and save points
     in the loop, privacy (the Memory panel and deletion), and the hosted-augmentation caveat.
 11. **Security and multi-tenancy.** RLS, per-app DB isolation, secret storage, sandbox isolation,
     and prompt-injection boundaries for imported repos.
@@ -219,11 +310,39 @@ Never cut the architecture doc or Planning/preview (sessions 2–3).
 
 ---
 
-## 8. Open questions for the owner
+## 8. Submission presentation order (owner rule, 2026-10-04)
 
-1. What's the **submission deadline**, and how many sessions are realistic? That decides whether
-   sessions 7–8 merge.
+Every submission artifact (README, ARCHITECTURE.md intro, Loom, form answers) leads with what
+**only we** have and lists features shared with other candidates **last**:
+1. Fix memory and the loop breaker → fair-billing ledger → builder memory and decision log →
+   visible memory and "Why?" → agent memory toggle (Cognis-compatible) → SEO/GEO toggle.
+2. *Then* the shared baseline: Simple/Pro lenses, plan-before-build, framework/model-agnostic
+   agents, GitHub, deploy, security check, click-to-edit.
+
+---
+
+## 9. Open questions for the owner
+
+1. **Deadline:** none is published (checked the brief, its page source and the careers page; the PM
+   listing is closed). Rival repos are still appearing, so assume it's rolling and ship early. Ask
+   the recruiter if possible.
 2. LLM budget: which provider keys, and what monthly cap?
 3. Is GitHub-only sign-in enough, or add Google/email? The brief cites Google sign-in as an example
    of a plus point.
 4. Can the repo be made **public** now (it's required at submission)?
+
+---
+
+## 10. Owner notes log (structured record of ideas from our discussions)
+
+Newest first. Each note: idea → where it lands in this plan → status.
+
+| Date | Owner idea | Lands in | Status |
+| --- | --- | --- | --- |
+| 2026-10-04 | Adopt "Architect remembers, so you never pay for the same mistake twice", and keep it evolving with every new idea | §3 | ✅ adopted |
+| 2026-10-04 | Mention Cognis, but build on Memori because it fits our TypeScript/Postgres architecture | §3, §5.10, ADR-004 | ✅ |
+| 2026-10-04 | Submission lists unique features first and shared ones last | §8 | ✅ |
+| 2026-10-04 | SEO/GEO optimization as a toggle; scope to discuss | §3.3, row 19 | 🟡 scope open |
+| 2026-10-04 | Explain agent-agnosticism and how hidden memory is shown | §3.1, §3.2 | ✅ |
+| 2026-10-04 | Manually explore other platforms (roadmap) | `docs/EXPLORATION.md` | ✅ checklist ready |
+| 2026-09-29 | "Architect remembers" (Memori), Simple/Pro, fixed stack | §3, CLAUDE.md | ✅ |
