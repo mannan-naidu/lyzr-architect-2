@@ -18,7 +18,7 @@ users edit or delete it.
 Grading priority: (1) technical architecture (diagram + `ARCHITECTURE.md`), (2) design & UX,
 (3) feature coverage (simulated flows OK), (4) working functionality (bonus).
 
-The original kickoff brief lives in `docs/KICKOFF.md`.
+The original kickoff brief lives in `docs/KICKOFF.md`. **Scope, feature list and session plan: `docs/PLAN.md`** (read it before starting a session).
 
 ## Stack (fixed — don't substitute without asking)
 
@@ -58,7 +58,7 @@ lib/
 proxy.ts                   # Next 16 "middleware" — refreshes session, guards app routes
 supabase/migrations/       # SQL migrations (source of truth for schema + RLS)
 scripts/                   # one-off scripts (e.g. memori-spike.ts)
-docs/                      # decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
+docs/                      # PLAN.md (scope + sessions), decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
 ARCHITECTURE.md            # the graded architecture write-up
 ```
 
