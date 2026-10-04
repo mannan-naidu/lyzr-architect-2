@@ -41,3 +41,31 @@ export async function signInWithProvider(formData: FormData) {
   }
   redirect(data.url);
 }
+
+/**
+ * Demo mode: a real (anonymous) Supabase user, so RLS, chat and memory all work without an
+ * account. Seeds one sample project so a reviewer lands on something to explore.
+ * Requires "Allow anonymous sign-ins" in Supabase → Authentication → Sign In / Providers.
+ */
+export async function signInAsGuest() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInAnonymously();
+  if (error || !data.user) {
+    redirect(`/login?error=${encodeURIComponent(error?.message ?? "demo_unavailable")}`);
+  }
+
+  const { data: project } = await supabase
+    .from("projects")
+    .insert({
+      owner_id: data.user.id,
+      name: "Support triage agent (demo)",
+      description:
+        "An agent that answers customer questions from our FAQ PDF and escalates unresolved ones to the team by email, with a small dashboard of escalations.",
+      framework: "lyzr",
+      memory_enabled: true,
+    })
+    .select("id")
+    .single();
+
+  redirect(project ? `/p/${project.id}` : "/dashboard");
+}

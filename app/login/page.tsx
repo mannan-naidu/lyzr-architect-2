@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { safeNextPath } from "@/lib/auth";
 
-import { signInWithProvider } from "./actions";
+import { signInAsGuest, signInWithProvider } from "./actions";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;
@@ -38,6 +38,14 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             <Button type="submit" name="provider" value="github" className="w-full">
               <GitHubIcon className="size-4" />
               Continue with GitHub
+            </Button>
+          </form>
+          <div className="my-4 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
+          </div>
+          <form action={signInAsGuest}>
+            <Button type="submit" variant="ghost" className="w-full">
+              Try the demo, no account needed
             </Button>
           </form>
           {error ? (

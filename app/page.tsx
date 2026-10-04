@@ -1,6 +1,7 @@
 import { ArrowUpIcon, BrainIcon, CodeIcon, MessageSquareIcon } from "lucide-react";
 import Link from "next/link";
 
+import { signInAsGuest } from "@/app/login/actions";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,12 @@ export default function Home() {
         <Logo />
         <div className="flex items-center gap-1">
           <ThemeToggle />
-          <Button asChild variant="ghost" size="sm">
+          <form action={signInAsGuest}>
+            <Button type="submit" variant="ghost" size="sm">
+              Try the demo
+            </Button>
+          </form>
+          <Button asChild variant="outline" size="sm">
             <Link href="/login">Sign in</Link>
           </Button>
         </div>

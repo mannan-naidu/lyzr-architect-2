@@ -90,9 +90,11 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
     (sum, r) => sum + (r.tokens_in ?? 0) + (r.tokens_out ?? 0),
     0,
   );
-  const { DAILY_TOKEN_CAP } = llmEnv();
-  if (usedToday >= DAILY_TOKEN_CAP) {
-    return json(429, `Daily limit reached (${DAILY_TOKEN_CAP.toLocaleString()} tokens). Try again tomorrow.`, "token_cap");
+  const { DAILY_TOKEN_CAP, DEMO_TOKEN_CAP } = llmEnv();
+  const cap = user.isAnonymous ? DEMO_TOKEN_CAP : DAILY_TOKEN_CAP;
+  if (usedToday >= cap) {
+    const hint = user.isAnonymous ? " Sign in for a higher limit." : " Try again tomorrow.";
+    return json(429, `Daily limit reached (${cap.toLocaleString()} tokens).${hint}`, "token_cap");
   }
 
   let resolved: ReturnType<typeof resolveModel>;

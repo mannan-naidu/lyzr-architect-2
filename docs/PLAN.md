@@ -340,6 +340,10 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-05 | **Parallel prompts** "the Claude way": send new prompts while earlier ones run, each streams independently without interrupting | chat panel | ✅ built |
+| 2026-10-05 | **Demo mode** (no account) | Supabase anonymous sign-in + seeded project + lower token cap | ✅ built (enable anonymous sign-ins in Supabase) |
+| 2026-10-05 | **Command palette** (⌘K) | app header | ✅ built |
+| 2026-10-05 | Groq key provided | Groq provider: GPT-OSS 120B/20B, Qwen 3.8 | ✅ verified live |
 | 2026-10-04 | Start building (before the rough UI arrives) | Google sign-in, streaming chat + model switcher + token cap, MemoryProvider (Memori) with cross-project recall, recall dropdown, per-turn usage ledger | ✅ built (needs Supabase + an LLM key to run end to end) |
 | 2026-10-04 | Memory recall as a **dropdown** under each reply | §3.2 | ✅ |
 | 2026-10-04 | Google sign-in | row 01 | 🔨 building |

@@ -45,5 +45,10 @@ export async function getCurrentUser() {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
   if (!claims?.sub) return null;
-  return { id: claims.sub, email: typeof claims.email === "string" ? claims.email : null };
+  return {
+    id: claims.sub,
+    email: typeof claims.email === "string" && claims.email ? claims.email : null,
+    /** Demo-mode guests (Supabase anonymous sign-in). */
+    isAnonymous: claims.is_anonymous === true,
+  };
 }

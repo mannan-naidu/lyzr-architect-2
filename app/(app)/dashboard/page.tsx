@@ -13,6 +13,7 @@ const dateFormat = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 export default async function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   const params = await searchParams;
   const prompt = typeof params.prompt === "string" ? params.prompt.slice(0, 2000) : undefined;
+  const openNew = Boolean(prompt) || params.new === "1";
 
   const supabase = await createClient();
   const { data: projects, error } = await supabase
@@ -28,7 +29,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           <p className="text-sm text-muted-foreground">Agents and apps you&apos;re building.</p>
         </div>
         {/* Arriving from the landing prompt box opens the dialog pre-filled. */}
-        <NewProjectDialog initialPrompt={prompt} defaultOpen={Boolean(prompt)} />
+        <NewProjectDialog key={openNew ? "open" : "closed"} initialPrompt={prompt} defaultOpen={openNew} />
       </div>
 
       {error ? (

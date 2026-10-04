@@ -53,6 +53,8 @@ const llmSchema = z.object({
   OPENROUTER_API_KEY: optionalKey,
   /** Per-user daily token cap across all projects (protects the shared demo keys). */
   DAILY_TOKEN_CAP: z.coerce.number().int().positive().default(200_000),
+  /** Lower cap for demo-mode (anonymous) guests. */
+  DEMO_TOKEN_CAP: z.coerce.number().int().positive().default(30_000),
 });
 
 export type LlmEnv = z.infer<typeof llmSchema>;

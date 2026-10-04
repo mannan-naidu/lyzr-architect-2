@@ -53,7 +53,24 @@ Session title bar → cloud environment menu → **Edit** → **Network access**
 - [ ] Copy the **Client ID** and **Client secret** → Supabase → **Authentication → Sign In /
       Providers → Google** → enable, paste both → **Save**.
 
-## 3. Apply the database migration
+## 2c. Demo mode (guest access for reviewers)
+
+- [ ] Supabase → **Authentication → Sign In / Providers → Allow anonymous sign-ins** → enable →
+      Save. ("Try the demo" creates a real but anonymous user, so RLS still applies, plus a
+      seeded sample project. Guests get the lower `DEMO_TOKEN_CAP`.)
+- [ ] Recommended: enable **CAPTCHA** (Authentication → Bot and Abuse Protection) once public,
+      since anonymous sign-ups can be abused.
+
+## 3. Apply the database migrations
+
+> The cloud sandbox can't open raw Postgres connections (port 5432), so use either the SQL Editor
+> (paste each file in `supabase/migrations/` in name order) or give Claude a Supabase **personal
+> access token** (Account → Access Tokens) as the `SUPABASE_ACCESS_TOKEN` environment variable,
+> and it runs them over HTTPS via the Management API.
+>
+> For `DATABASE_URL` use **Connect → Session pooler** (`postgres.<ref>@aws-…pooler.supabase.com:5432`),
+> not the direct `db.<ref>.supabase.co` host: that one is IPv6-only and unreachable from Vercel.
+
 
 From a machine (or the cloud session) with network access to Supabase:
 
