@@ -2,7 +2,7 @@ import { Output, streamText } from "ai";
 import { z } from "zod";
 
 import { ModelUnavailableError, resolveModel } from "@/lib/ai/registry.server";
-import { agentsRuntimeFile } from "@/lib/build/agents-runtime";
+import { agentsRuntimeFile, fixAgentImports } from "@/lib/build/agents-runtime";
 import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.server";
 import { BUILDER_INSTRUCTIONS, planToBuildPrompt, SEO_BUILD_RULES } from "@/lib/build/prompts";
 import { generatedFilesSchema, planSchema } from "@/lib/build/schemas";
@@ -101,12 +101,12 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
 
         const output = await result.output;
         const usage = await result.totalUsage;
-        const files = [
+        const files = fixAgentImports([
           ...output.files
             .map((f) => ({ path: normalizePath(f.path), content: f.content }))
             .filter((f) => f.path !== "/agents.ts"),
           { path: "/agents.ts", content: agentsRuntimeFile(plan.data.agents) },
-        ];
+        ]);
         if (!files.some((f) => f.path === "/App.tsx")) throw new Error("The model did not produce /App.tsx");
 
         await saveFiles(supabase, id, files);

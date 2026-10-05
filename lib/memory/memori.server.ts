@@ -17,7 +17,10 @@ const MIN_SCORE = 0.25;
  * `OpenClawIntegration`) to recall before and capture after each turn. See docs/memori-spike.md.
  */
 export async function createMemoriProvider(connectionString: string): Promise<MemoryProvider> {
-  const admin = new pg.Client({ connectionString });
+  // Supabase accepts TLS; encrypt the connection. Its certificates chain to Supabase's own CA,
+  // which Node doesn't ship, so we encrypt without verifying the chain (local Postgres: no TLS).
+  const ssl = /\.supabase\.(co|com)\b/.test(connectionString) ? { rejectUnauthorized: false } : undefined;
+  const admin = new pg.Client({ connectionString, ssl });
   await admin.connect();
   try {
     await admin.query(`create schema if not exists ${pg.escapeIdentifier(SCHEMA)}`);
@@ -29,6 +32,7 @@ export async function createMemoriProvider(connectionString: string): Promise<Me
   // Memori's first query. Requires Supabase's *session* pooler (port 5432).
   const pool = new pg.Pool({
     connectionString,
+    ssl,
     max: 5,
     options: `-c search_path=${SCHEMA}`,
   });

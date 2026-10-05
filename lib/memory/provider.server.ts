@@ -59,6 +59,22 @@ export const noopMemory: MemoryProvider = {
 };
 
 let provider: Promise<MemoryProvider | null> | undefined;
+let lastInitError: string | null = null;
+
+/** Strip anything that looks like a connection string or credential from an error message. */
+function scrub(message: string): string {
+  return message.replace(/postgres(ql)?:\/\/[^\s"']+/gi, "postgres://***").slice(0, 300);
+}
+
+/** Why memory is or isn't available, for the Memory tab and /api/health. Never includes secrets. */
+export async function getMemoryStatus(): Promise<
+  { status: "ok"; backend: string } | { status: "not_configured" } | { status: "error"; error: string }
+> {
+  if (!process.env.DATABASE_URL) return { status: "not_configured" };
+  const p = await getMemoryProvider();
+  if (p) return { status: "ok", backend: p.name };
+  return { status: "error", error: lastInitError ?? "Memory failed to start." };
+}
 
 /**
  * The configured provider, or null if none is available (no DATABASE_URL). Created once per
@@ -74,9 +90,12 @@ export function getMemoryProvider(): Promise<MemoryProvider | null> {
         process.env.FASTEMBED_CACHE_DIR = "/tmp/fastembed_cache";
       }
       const { createMemoriProvider } = await import("@/lib/memory/memori.server");
-      return createMemoriProvider(process.env.DATABASE_URL);
+      const created = await createMemoriProvider(process.env.DATABASE_URL);
+      lastInitError = null;
+      return created;
     })().catch((err: unknown) => {
-      console.error("[memory] provider init failed:", err instanceof Error ? err.message : err);
+      lastInitError = scrub(err instanceof Error ? err.message : String(err));
+      console.error("[memory] provider init failed:", lastInitError);
       provider = undefined; // retry on the next request
       return null;
     });

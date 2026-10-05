@@ -5,6 +5,7 @@ import { DefaultChatTransport } from "ai";
 import { ArrowUpIcon, SquareIcon } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
+import { Markdown } from "@/components/chat/markdown";
 import { MemoryRecall } from "@/components/chat/memory-recall";
 import { UsageLine } from "@/components/chat/usage-line";
 import { Button } from "@/components/ui/button";
@@ -168,7 +169,7 @@ function MessageView({ message }: { message: ArchitectUIMessage }) {
             ) : (
               <div key={i} className="max-w-[95%] text-sm">
                 <span className="label-mono block text-primary">Architect</span>
-                <span className="whitespace-pre-wrap">{part.text}</span>
+                <Markdown text={part.text} />
               </div>
             );
           case "data-memory":

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { ModelUnavailableError, resolveModel } from "@/lib/ai/registry.server";
 import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.server";
+import { fixAgentImports } from "@/lib/build/agents-runtime";
 import { FIXER_INSTRUCTIONS, SEO_BUILD_RULES } from "@/lib/build/prompts";
 import { fixSchema } from "@/lib/build/schemas";
 import { errorSignature } from "@/lib/build/signature";
@@ -152,9 +153,9 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
       maxOutputTokens: 12000,
     });
     const fix = result.output;
-    const changed = fix.files
-      .map((f) => ({ path: normalizePath(f.path), content: f.content }))
-      .filter((f) => f.path !== "/agents.ts");
+    const changed = fixAgentImports(
+      fix.files.map((f) => ({ path: normalizePath(f.path), content: f.content })).filter((f) => f.path !== "/agents.ts"),
+    );
     const before = files.filter((f) => changed.some((c) => c.path === f.path));
     const attemptNo = streak.length + 1;
     const inputTokens = result.totalUsage.inputTokens ?? 0;

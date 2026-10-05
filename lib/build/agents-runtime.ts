@@ -47,3 +47,21 @@ export async function runAgent(agentName: string, input: string): Promise<string
 }
 `;
 }
+
+/**
+ * Models often write `import { runAgent } from "./agents"` in files inside folders (e.g.
+ * /components/Chat.tsx), where the correct path is "../agents". Rewrite every import of the
+ * agents module to the right relative path for its file, so a build never fails on it.
+ */
+export function fixAgentImports<T extends { path: string; content: string }>(files: T[]): T[] {
+  return files.map((f) => {
+    if (f.path === "/agents.ts" || !/\.(t|j)sx?$/.test(f.path)) return f;
+    const depth = f.path.split("/").length - 2; // "/App.tsx" → 0, "/components/Chat.tsx" → 1
+    const target = depth === 0 ? "./agents" : `${"../".repeat(depth)}agents`;
+    const content = f.content.replace(
+      /(from\s+|import\s*\(\s*)(["'])((?:\.{1,2}\/)+|\/)agents(?:\.ts)?\2/g,
+      (_m, lead: string, q: string) => `${lead}${q}${target}${q}`,
+    );
+    return content === f.content ? f : { ...f, content };
+  });
+}

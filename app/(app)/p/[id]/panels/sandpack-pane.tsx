@@ -13,6 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { fixAgentImports } from "@/lib/build/agents-runtime";
 import type { FixResponse, WorkspaceFile } from "@/lib/build/types";
 
 import { readApiError, useWorkspace } from "../workspace-context";
@@ -44,7 +45,10 @@ export function SandpackPane({ files }: { files: WorkspaceFile[] }) {
   const { setSnapshot } = useWorkspace();
   const sandpackFiles = useMemo(
     () => ({
-      ...Object.fromEntries(files.filter((f) => !isDeployArtifact(f.path)).map((f) => [f.path, { code: f.content }])),
+      // fixAgentImports also repairs projects built before the server-side fix existed.
+      ...Object.fromEntries(
+        fixAgentImports(files.filter((f) => !isDeployArtifact(f.path))).map((f) => [f.path, { code: f.content }]),
+      ),
       "/index.tsx": { code: ENTRY, hidden: true },
     }),
     [files],

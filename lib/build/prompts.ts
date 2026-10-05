@@ -9,7 +9,7 @@ export const BUILDER_INSTRUCTIONS = `You write small, polished React + TypeScrip
 Rules:
 - Entry is /App.tsx with a default export. Only import from "react" and relative files.
 - Style with Tailwind utility classes (Tailwind is loaded from a CDN). Make it look finished: spacing, hierarchy, empty states.
-- Call AI agents ONLY through: import { runAgent, AGENTS } from "./agents"; — runAgent(agentName: string, input: string): Promise<string>.
+- Call AI agents ONLY through the provided /agents.ts module — runAgent(agentName: string, input: string): Promise<string>. Import it with the correct relative path: "./agents" from /App.tsx, "../agents" from /components/*.tsx.
   Do not create /agents.ts; it is provided. Use the exact agent names from the plan.
 - 2-5 files, under 350 lines total. No placeholder TODOs, no external network calls.`;
 

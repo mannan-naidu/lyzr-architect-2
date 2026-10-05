@@ -3,7 +3,7 @@
 import { z } from "zod";
 
 import type { StoredMemory } from "@/lib/memory/types";
-import { getMemoryProvider } from "@/lib/memory/provider.server";
+import { getMemoryProvider, getMemoryStatus } from "@/lib/memory/provider.server";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 // The Memory panel's controls. Memori lives outside Supabase RLS, so every action first checks
@@ -28,7 +28,11 @@ export async function listMemories(input: {
   const owner = await ownerOf(projectId);
   if ("error" in owner) return owner;
   const provider = await getMemoryProvider();
-  if (!provider) return { memories: [], backend: "none" };
+  if (!provider) {
+    const status = await getMemoryStatus();
+    if (status.status === "error") return { error: `Memory couldn't start: ${status.error}` };
+    return { memories: [], backend: "none" };
+  }
   try {
     return { memories: await provider.list(owner.userId, projectId), backend: provider.name };
   } catch (err) {
