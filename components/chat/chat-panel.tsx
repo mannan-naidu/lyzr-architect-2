@@ -73,8 +73,8 @@ export function ChatPanel({ projectId, projectDescription, modelId, initialMessa
 
   return (
     <section aria-label="Chat" data-tour="chat" className="flex min-h-0 w-full flex-col md:w-[420px] md:shrink-0">
-      <ScrollArea className="min-h-0 flex-1">
-        <div className="space-y-4 p-4">
+      <ScrollArea className="min-h-0 flex-1 [&_[data-radix-scroll-area-viewport]>div]:!block">
+        <div className="min-w-0 space-y-4 break-words p-4">
           {initialMessages.length === 0 && runs.length === 0 ? (
             <div className="rounded-lg bg-muted p-3 text-sm">
               <p className="font-medium">Hi! I&apos;m Architect.</p>
@@ -167,7 +167,7 @@ function MessageView({ message }: { message: ArchitectUIMessage }) {
                 <span className="whitespace-pre-wrap">{part.text}</span>
               </div>
             ) : (
-              <div key={i} className="max-w-[95%] text-sm">
+              <div key={i} className="max-w-[95%] min-w-0 text-sm">
                 <span className="label-mono block text-primary">Architect</span>
                 <Markdown text={part.text} />
               </div>

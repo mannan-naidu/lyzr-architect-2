@@ -28,7 +28,7 @@ export function Markdown({ text }: { text: string }) {
           ) : (
             <code className="bg-muted px-1 py-0.5 font-mono text-[0.85em]">{children}</code>
           ),
-        pre: ({ children }) => <pre className="my-2 overflow-x-auto border bg-muted/40 p-2 font-mono text-xs">{children}</pre>,
+        pre: ({ children }) => <pre className="my-2 max-w-full overflow-x-auto border bg-muted/40 p-2 font-mono text-xs whitespace-pre-wrap break-words">{children}</pre>,
         table: ({ children }) => (
           <div className="my-2 overflow-x-auto">
             <table className="w-full border text-xs">{children}</table>
