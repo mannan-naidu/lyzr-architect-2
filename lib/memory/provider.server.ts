@@ -68,6 +68,11 @@ export function getMemoryProvider(): Promise<MemoryProvider | null> {
   if (!provider) {
     provider = (async () => {
       if (!process.env.DATABASE_URL) return null;
+      // Memori's engine downloads its embedding model (~87 MB) to ./.fastembed_cache. Serverless
+      // filesystems are read-only except /tmp, so point the cache there (kept while the instance is warm).
+      if (process.env.VERCEL && !process.env.FASTEMBED_CACHE_DIR) {
+        process.env.FASTEMBED_CACHE_DIR = "/tmp/fastembed_cache";
+      }
       const { createMemoriProvider } = await import("@/lib/memory/memori.server");
       return createMemoriProvider(process.env.DATABASE_URL);
     })().catch((err: unknown) => {

@@ -11,6 +11,7 @@ import {
   FileTextIcon,
   RocketIcon,
   ScrollTextIcon,
+  SearchIcon,
   SparklesIcon,
 } from "lucide-react";
 import { useOptimistic, useState, useTransition, type ComponentType } from "react";
@@ -136,6 +137,11 @@ function WorkspaceShell({
         {project.memory_enabled ? (
           <span className="label-mono hidden items-center gap-1 text-muted-foreground sm:inline-flex">
             <BrainIcon className="size-3" /> Memory on
+          </span>
+        ) : null}
+        {project.seo_enabled ? (
+          <span className="label-mono hidden items-center gap-1 text-muted-foreground sm:inline-flex">
+            <SearchIcon className="size-3" /> SEO + GEO
           </span>
         ) : null}
 

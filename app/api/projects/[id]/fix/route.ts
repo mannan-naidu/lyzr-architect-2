@@ -3,7 +3,7 @@ import { z } from "zod";
 
 import { ModelUnavailableError, resolveModel } from "@/lib/ai/registry.server";
 import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.server";
-import { FIXER_INSTRUCTIONS } from "@/lib/build/prompts";
+import { FIXER_INSTRUCTIONS, SEO_BUILD_RULES } from "@/lib/build/prompts";
 import { fixSchema } from "@/lib/build/schemas";
 import { errorSignature } from "@/lib/build/signature";
 import { logEvent, normalizePath, recordUsage, saveFiles } from "@/lib/build/store.server";
@@ -146,7 +146,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
   try {
     const result = await generateText({
       model: resolved.model,
-      instructions: FIXER_INSTRUCTIONS,
+      instructions: project.seo_enabled ? `${FIXER_INSTRUCTIONS}\n\nKeep these rules intact:\n${SEO_BUILD_RULES}` : FIXER_INSTRUCTIONS,
       prompt: context,
       output: Output.object({ schema: fixSchema }),
       maxOutputTokens: 12000,

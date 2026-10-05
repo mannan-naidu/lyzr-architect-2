@@ -10,6 +10,7 @@ import type { Plan } from "@/lib/build/schemas";
 
 import { approvePlan } from "../actions";
 import { readApiError, useWorkspace } from "../workspace-context";
+import { SeoSwitch } from "./seo-switch";
 import { useBuild } from "./use-build";
 
 /** Plan before build: generate → review → revise → approve & build. */
@@ -66,6 +67,9 @@ export function PlanPanel() {
           <span className="label-mono block text-muted-foreground">Your idea</span>
           {project.description ?? "Describe your app in the chat, or add a description to the project."}
         </div>
+        <div className="w-full">
+          <SeoSwitch />
+        </div>
         <Button onClick={() => void generate()} disabled={pending || !project.description}>
           {pending ? <LoaderIcon className="animate-spin" /> : <SparklesIcon />}
           {pending ? "Planning… checking your memory" : "Generate the plan"}
@@ -94,6 +98,8 @@ export function PlanPanel() {
           </Button>
         )}
       </div>
+
+      <SeoSwitch />
 
       {recalled.length ? (
         <div className="flex items-start gap-2 border border-primary/30 bg-primary/5 p-3 text-sm">

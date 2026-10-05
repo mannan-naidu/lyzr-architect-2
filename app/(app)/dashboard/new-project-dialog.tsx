@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainIcon, PlusIcon } from "lucide-react";
+import { BrainIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,7 @@ export function NewProjectDialog({
         <form action={formAction} className="space-y-5">
           <DialogHeader>
             <DialogTitle>New project</DialogTitle>
-            <DialogDescription>Name it, pick a framework, and decide if it should remember.</DialogDescription>
+            <DialogDescription>Name it, pick a framework, and decide if it should remember and be found.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
@@ -96,6 +96,19 @@ export function NewProjectDialog({
               <span className="block text-sm text-muted-foreground">
                 The agent remembers users&apos; preferences and past conversations via Memori. You can view
                 and delete memories anytime.
+              </span>
+            </span>
+          </label>
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-checked:border-primary has-checked:bg-primary/5">
+            <input type="checkbox" name="seo_enabled" className="mt-1 size-4 accent-primary" />
+            <span className="space-y-1">
+              <span className="flex items-center gap-1.5 text-sm font-medium">
+                <SearchIcon className="size-4" /> Public website: optimise for search and AI answers
+              </span>
+              <span className="block text-sm text-muted-foreground">
+                SEO + GEO. Builds static-first so every word is real HTML, then deploys a pre-rendered page with meta tags,
+                sitemap, JSON-LD and llms.txt. Best switched on now; you can change it in the Plan step.
               </span>
             </span>
           </label>

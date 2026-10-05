@@ -28,9 +28,13 @@ export async function setProjectMode(input: z.input<typeof setModeSchema>) {
 export async function approvePlan(input: { projectId: string }) {
   const { projectId } = z.object({ projectId: z.uuid() }).parse(input);
   const supabase = await createClient();
-  const { data: project } = await supabase.from("projects").select("plan").eq("id", projectId).maybeSingle();
+  const { data: project } = await supabase.from("projects").select("plan, seo_enabled").eq("id", projectId).maybeSingle();
   const plan = planSchema.safeParse(project?.plan);
   if (!plan.success) return { error: "There is no plan to approve yet." };
+  const decisions = [
+    ...plan.data.decisions,
+    ...(project?.seo_enabled ? ["Rendering: static-first, all content in HTML on first load (SEO + GEO on)"] : []),
+  ];
 
   const { error } = await supabase
     .from("projects")
@@ -39,10 +43,10 @@ export async function approvePlan(input: { projectId: string }) {
   if (error) return { error: error.message };
 
   await supabase.from("decisions").delete().eq("project_id", projectId).eq("source", "plan");
-  if (plan.data.decisions.length) {
+  if (decisions.length) {
     await supabase
       .from("decisions")
-      .insert(plan.data.decisions.map((text) => ({ project_id: projectId, text: text.slice(0, 500), source: "plan" as const })));
+      .insert(decisions.map((text) => ({ project_id: projectId, text: text.slice(0, 500), source: "plan" as const })));
   }
   revalidatePath(`/p/${projectId}`);
   return { ok: true as const };

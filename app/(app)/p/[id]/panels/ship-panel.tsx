@@ -33,17 +33,17 @@ type DeploymentRow = { id: string; status: string; url: string | null; logs: unk
 
 /** Ship: pre-deploy checks (security, SEO/GEO), deploy, GitHub, content mode. */
 export function ShipPanel() {
-  const { project, files } = useWorkspace();
-  const [seoOn, setSeoOptimistic] = useOptimistic(project.seo_enabled);
+  const { project, files, snapshot, setActiveTab } = useWorkspace();
+  const seoOn = project.seo_enabled;
   const [cmsOn, setCmsOptimistic] = useOptimistic(project.cms_enabled);
   const [, startFlag] = useTransition();
   const findings = useMemo(() => securityScan(files), [files]);
-  const audit = useMemo(() => seoAudit(files, seoOn), [files, seoOn]);
+  const audit = useMemo(() => seoAudit({ files, seoEnabled: seoOn, html: snapshot }), [files, seoOn, snapshot]);
 
-  const flag = (key: "seo_enabled" | "cms_enabled", next: boolean) =>
+  const setCms = (next: boolean) =>
     startFlag(async () => {
-      (key === "seo_enabled" ? setSeoOptimistic : setCmsOptimistic)(next);
-      const result = await setProjectFlags({ projectId: project.id, [key]: next });
+      setCmsOptimistic(next);
+      const result = await setProjectFlags({ projectId: project.id, cms_enabled: next });
       if ("error" in result) toast.error(result.error);
     });
 
@@ -97,10 +97,9 @@ export function ShipPanel() {
       <section className="space-y-3 border p-4">
         <header className="flex items-center gap-2">
           <SearchIcon className="size-4 text-primary" />
-          <h3 className="font-medium">SEO + GEO</h3>
-          <span className="ml-auto flex items-center gap-2 text-xs">
-            {seoOn ? "On" : "Off"}
-            <SwitchToggle checked={seoOn} onCheckedChange={(v) => flag("seo_enabled", v)} label="SEO and GEO optimisation" />
+          <h3 className="font-medium">SEO + GEO report</h3>
+          <span className={cn("label-mono ml-auto", seoOn ? "text-[var(--green)]" : "text-muted-foreground")}>
+            {seoOn ? "on · static-first" : "off"}
           </span>
         </header>
         <div className="flex items-center gap-4">
@@ -109,8 +108,20 @@ export function ShipPanel() {
             <span className="label-mono text-muted-foreground">/100</span>
           </div>
           <p className="text-sm text-muted-foreground">
-            Get found on Google <em>and</em> quoted by ChatGPT, Perplexity and Claude. The toggle adds meta tags, a sitemap,
-            robots.txt, JSON-LD and an <code>llms.txt</code> for AI answer engines.
+            {audit.source === "rendered"
+              ? "Audited on the HTML your preview actually rendered: what Google and AI crawlers receive."
+              : "Open the Preview once to audit the rendered HTML; until then this scans the source."}{" "}
+            {seoOn ? (
+              <>Deploys ship a pre-rendered <code>index.html</code> plus meta tags, sitemap, robots.txt, JSON-LD and <code>llms.txt</code>.</>
+            ) : (
+              <>
+                It&apos;s off, so deploys ship an empty JavaScript shell that crawlers can&apos;t read.{" "}
+                <button type="button" className="text-primary underline-offset-2 hover:underline" onClick={() => setActiveTab("plan")}>
+                  Turn it on in Plan
+                </button>{" "}
+                and rebuild.
+              </>
+            )}
           </p>
         </div>
         <ul className="grid gap-1 sm:grid-cols-2">
@@ -141,7 +152,7 @@ export function ShipPanel() {
             GEO structured data automatically.
           </p>
         </div>
-        <SwitchToggle checked={cmsOn} onCheckedChange={(v) => flag("cms_enabled", v)} label="Content mode" />
+        <SwitchToggle checked={cmsOn} onCheckedChange={setCms} label="Content mode" />
       </section>
     </div>
   );
@@ -178,7 +189,7 @@ function SeoFilesPreview() {
 }
 
 function DeployCard({ findings }: { findings: SecurityFinding[] }) {
-  const { project, files } = useWorkspace();
+  const { project, files, snapshot, setFiles } = useWorkspace();
   const [history, setHistory] = useState<DeploymentRow[]>([]);
   const [lines, setLines] = useState<string[]>([]);
   const [phase, setPhase] = useState<"idle" | "deploying" | "done">("idle");
@@ -205,7 +216,7 @@ function DeployCard({ findings }: { findings: SecurityFinding[] }) {
     start(async () => {
       setPhase("deploying");
       setLines([]);
-      const result = await deployProject({ projectId: project.id, force });
+      const result = await deployProject({ projectId: project.id, force, html: snapshot ?? undefined });
       if ("error" in result) {
         toast.error(result.error);
         setPhase("idle");
@@ -218,6 +229,10 @@ function DeployCard({ findings }: { findings: SecurityFinding[] }) {
           action: { label: "Deploy anyway", onClick: () => deploy(true) },
         });
         return;
+      }
+      if (result.dist.length) {
+        const distPaths = new Set(result.dist.map((d) => d.path));
+        setFiles([...files.filter((f) => !distPaths.has(f.path)), ...result.dist]);
       }
       const logLines = Array.isArray(result.deployment.logs) ? result.deployment.logs.map(String) : [];
       for (const line of logLines) {

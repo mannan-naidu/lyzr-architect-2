@@ -53,20 +53,67 @@ export function seoFiles(plan: Plan | null, appName: string, url: string, faqs: 
   } satisfies Record<string, string>;
 }
 
-export function seoAudit(files: WorkspaceFile[], seoEnabled: boolean): { score: number; checks: SeoCheck[] } {
-  const code = files.map((f) => f.content).join("\n");
-  const has = (re: RegExp) => re.test(code);
+/** Visible words in an HTML fragment (tags, scripts and styles removed). */
+export function visibleWords(html: string): number {
+  const text = html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z#0-9]+;/gi, " ");
+  return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
+}
+
+/**
+ * The SEO + GEO report. When a pre-render snapshot exists (the HTML the preview actually rendered,
+ * captured from the sandbox), every structural check runs against that HTML: what a crawler gets.
+ * Otherwise it falls back to scanning the source.
+ */
+export function seoAudit(input: {
+  files: WorkspaceFile[];
+  seoEnabled: boolean;
+  /** Rendered body HTML from the preview, or null if not captured yet. */
+  html: string | null;
+}): { score: number; checks: SeoCheck[]; words: number; source: "rendered" | "source" } {
+  const { files, seoEnabled, html } = input;
+  const subject = html ?? files.map((f) => f.content).join("\n");
+  const has = (re: RegExp) => re.test(subject);
+  const words = html ? visibleWords(html) : 0;
   const checks: SeoCheck[] = [
-    { id: "title", label: "Page title and meta description", ok: seoEnabled, fix: "Turn on SEO/GEO to generate them from your plan." },
-    { id: "h1", label: "One clear <h1> heading", ok: (code.match(/<h1[\s>]/g) ?? []).length === 1, fix: "Use exactly one h1 per page." },
+    {
+      id: "prerender",
+      label: html ? `Content in the HTML without JavaScript (${words} words)` : "Content in the HTML without JavaScript",
+      ok: seoEnabled && words >= 150,
+      fix: seoEnabled
+        ? "Rebuild so all key content renders on first load (at least ~150 words)."
+        : "Turn on SEO + GEO: deploys then ship a pre-rendered index.html instead of an empty JavaScript shell.",
+    },
+    { id: "title", label: "Page title and meta description", ok: seoEnabled, fix: "Generated from your plan when SEO + GEO is on." },
+    { id: "h1", label: "Exactly one <h1> heading", ok: (subject.match(/<h1[\s>]/g) ?? []).length === 1, fix: "Use exactly one h1 per page." },
     { id: "alt", label: "Images have alt text", ok: !has(/<img(?![^>]*\balt=)[^>]*>/), fix: "Add alt text to every image." },
     { id: "semantic", label: "Semantic landmarks (header, main, nav)", ok: has(/<main[\s>]/) && (has(/<header[\s>]/) || has(/<nav[\s>]/)), fix: "Wrap content in <main> and add a <header> or <nav>." },
-    { id: "links", label: "Descriptive links (no “click here”)", ok: !/click here/i.test(code), fix: "Describe where each link goes." },
-    { id: "sitemap", label: "sitemap.xml and robots.txt", ok: seoEnabled, fix: "Generated when SEO/GEO is on." },
-    { id: "jsonld", label: "Structured data (JSON-LD)", ok: seoEnabled, fix: "Generated when SEO/GEO is on.", geo: true },
-    { id: "llms", label: "llms.txt for AI answer engines", ok: seoEnabled, fix: "Generated when SEO/GEO is on.", geo: true },
-    { id: "faq", label: "Question-style headings AI can quote", ok: has(/<h[23][^>]*>[^<]*\?/), fix: "Add an FAQ section with question headings.", geo: true },
+    { id: "links", label: "Descriptive links (no “click here”)", ok: !/click here/i.test(subject), fix: "Describe where each link goes." },
+    { id: "sitemap", label: "sitemap.xml and robots.txt", ok: seoEnabled, fix: "Generated when SEO + GEO is on." },
+    { id: "jsonld", label: "Structured data (JSON-LD)", ok: seoEnabled, fix: "Generated when SEO + GEO is on.", geo: true },
+    { id: "llms", label: "llms.txt for AI answer engines", ok: seoEnabled, fix: "Generated when SEO + GEO is on.", geo: true },
+    { id: "faq", label: "Question-style headings AI can quote", ok: has(/<h[23][^>]*>[^<]*\?\s*</), fix: "Add an FAQ section with question headings.", geo: true },
   ];
   const score = Math.round((checks.filter((c) => c.ok).length / checks.length) * 100);
-  return { score, checks };
+  return { score, checks, words, source: html ? "rendered" : "source" };
+}
+
+/** The static index.html shipped when SEO + GEO is on: full head + pre-rendered body + app script. */
+export function prerenderedDocument(head: string, bodyHtml: string): string {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+${head}
+</head>
+<body>
+<div id="root">${bodyHtml}</div>
+<!-- The React app hydrates this markup; crawlers read it without running JavaScript. -->
+<script type="module" src="/assets/app.js"></script>
+</body>
+</html>
+`;
 }

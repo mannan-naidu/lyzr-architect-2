@@ -12,6 +12,7 @@ const createProjectSchema = z.object({
   description: z.string().trim().max(2000).optional().transform((v) => v || null),
   framework: z.enum(AGENT_FRAMEWORKS),
   memory_enabled: z.boolean(),
+  seo_enabled: z.boolean(),
 });
 
 export type CreateProjectState = { error?: string; fieldErrors?: Record<string, string[]> };
@@ -28,6 +29,7 @@ export async function createProject(
     description: formData.get("description") ?? undefined,
     framework: formData.get("framework"),
     memory_enabled: formData.get("memory_enabled") === "on",
+    seo_enabled: formData.get("seo_enabled") === "on",
   });
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };

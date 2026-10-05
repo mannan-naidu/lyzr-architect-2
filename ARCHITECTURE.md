@@ -516,9 +516,23 @@ There are three different proxies. Each has one job.
    - tokens in localStorage.
 
    Production adds "tables without RLS" and dependency CVEs.
-2. **SEO/GEO** (built): when the toggle is on, the deploy adds meta and OpenGraph tags, `robots.txt`
-   (AI crawlers allowed), `sitemap.xml`, **JSON-LD** (WebApplication, plus FAQPage from published
-   CMS FAQs) and **`llms.txt`** for AI answer engines. A 9-point audit scores the app.
+2. **SEO + GEO** (built). This is a *build mode*, not a deploy add-on. It is switched on when the
+   project is created (or in the Plan step), because a client-rendered React SPA ships an empty
+   `<div id="root">` that crawlers and AI answer engines read poorly. When it's on:
+   - **Build static-first.** The builder (and fixer) get extra rules: all primary content renders on
+     the first render as semantic HTML (one `h1`, `header/main/footer`, question headings for
+     FAQs, alt text, anchors), never behind effects, fetches or tabs.
+   - **Pre-render snapshot.** The preview's entry file posts the rendered body HTML to the
+     workspace after the first render settles (`postMessage`, origin-checked). This is the same
+     technique as react-snap / prerender.io, and it runs in the sandbox, never on our servers.
+   - **Ship a static page.** Deploy writes `/dist/index.html`: the snapshot inside a full `<head>`
+     (title, description, canonical, OpenGraph, **JSON-LD** WebApplication + FAQPage from CMS FAQs).
+     It also writes `robots.txt` (AI crawlers allowed), `sitemap.xml` and **`llms.txt`**. React
+     hydrates on top, so the page is readable without JavaScript and still interactive.
+   - **Report at the end.** Ship audits the *rendered* HTML (words readable without JS, one `h1`,
+     landmarks, alt text, question headings, structured data) and scores it out of 100.
+   - **Production:** the same contract, with real SSG in the sandbox (Vite SSG / Next static export
+     per route), so multi-page sites get one static file per route.
 3. **Build and host** (simulated in the prototype; the logs, URL and history are recorded in
    `deployments`). Production:
    - the UI is built in the sandbox and deployed via the **Vercel Deployments API** (a team-owned

@@ -19,11 +19,54 @@ import { readApiError, useWorkspace } from "../workspace-context";
 
 const TAILWIND_CDN = "https://cdn.tailwindcss.com";
 
+/**
+ * Entry point injected into every preview. Besides mounting the app, it posts the rendered body
+ * HTML to the workspace once the first render settles: the pre-render snapshot that SEO + GEO
+ * ships as static index.html, and that the SEO report audits (what a crawler actually gets).
+ */
+const ENTRY = `import React, { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./styles.css";
+import App from "./App";
+
+const el = document.getElementById("root")!;
+createRoot(el).render(<StrictMode><App /></StrictMode>);
+
+setTimeout(() => {
+  window.parent.postMessage({ type: "architect:snapshot", html: el.innerHTML }, "*");
+}, 1500);
+`;
+
+/** Files Architect produces for deploys (e.g. /dist/index.html) never enter the sandbox. */
+const isDeployArtifact = (path: string) => path.startsWith("/dist/");
+
 export function SandpackPane({ files }: { files: WorkspaceFile[] }) {
+  const { setSnapshot } = useWorkspace();
   const sandpackFiles = useMemo(
-    () => Object.fromEntries(files.map((f) => [f.path, { code: f.content }])),
+    () => ({
+      ...Object.fromEntries(files.filter((f) => !isDeployArtifact(f.path)).map((f) => [f.path, { code: f.content }])),
+      "/index.tsx": { code: ENTRY, hidden: true },
+    }),
     [files],
   );
+
+  // Receive the snapshot from the sandbox iframe (Sandpack's bundler runs on *.codesandbox.io).
+  useEffect(() => {
+    const onMessage = (e: MessageEvent<unknown>) => {
+      let host: string;
+      try {
+        host = new URL(e.origin).hostname;
+      } catch {
+        return;
+      }
+      if (!host.endsWith(".codesandbox.io")) return;
+      const data = e.data;
+      if (!data || typeof data !== "object" || !("type" in data) || data.type !== "architect:snapshot") return;
+      if ("html" in data && typeof data.html === "string") setSnapshot(data.html.slice(0, 400_000));
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [setSnapshot]);
 
   return (
     <SandpackProvider

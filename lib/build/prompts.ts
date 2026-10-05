@@ -13,6 +13,19 @@ Rules:
   Do not create /agents.ts; it is provided. Use the exact agent names from the plan.
 - 2-5 files, under 350 lines total. No placeholder TODOs, no external network calls.`;
 
+/**
+ * Added to the builder (and fixer) when the project's SEO + GEO switch is on. The app is still
+ * React, but it must render all of its real content as semantic HTML on the first render, so
+ * the pre-render snapshot taken at deploy (static index.html) contains everything a search
+ * engine or AI crawler needs without running JavaScript.
+ */
+export const SEO_BUILD_RULES = `This is a PUBLIC website with SEO + GEO on. Build it "static-first":
+- All important content (headline, value proposition, features, pricing, FAQs, contact) must be rendered on the FIRST render as real text in semantic HTML. Never load primary content via useEffect, timers or fetch, and never hide it behind tabs, accordions that unmount, or modals.
+- Structure: <header> with <nav>, one <main>, <footer>. Exactly ONE <h1>. Use <h2>/<h3> for sections; FAQ questions as <h3> headings that end with "?", each followed by a <p> answer.
+- Every <img> has descriptive alt text. Links have descriptive text (never "click here"). Use <a href="#section"> anchors for in-page navigation, not onClick-only buttons.
+- Write substantial, specific copy (at least 300 words of visible text), in short paragraphs and lists AI answer engines can quote.
+- Interactive agent widgets (runAgent) are fine, but they enhance the page; the content around them must stand on its own.`;
+
 export const FIXER_INSTRUCTIONS = `You fix runtime and build errors in a small React + TypeScript app running in Sandpack.
 Find the root cause and change as little as possible. Return full contents for each file you change.
 Never edit /agents.ts. If a "known fix" is provided from the user's history, prefer it. Never repeat an

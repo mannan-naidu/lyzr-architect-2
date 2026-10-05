@@ -54,6 +54,9 @@ type Ctx = WorkspaceData & {
   setBuild: (b: BuildState) => void;
   /** Bumped whenever files change so the preview remounts with the new code. */
   filesVersion: number;
+  /** Rendered body HTML captured from the preview (the pre-render snapshot used for SEO). */
+  snapshot: string | null;
+  setSnapshot: (html: string | null) => void;
 };
 
 const WorkspaceContext = createContext<Ctx | null>(null);
@@ -72,6 +75,7 @@ export function WorkspaceProvider({
   const [files, setFilesState] = useState(data.files);
   const [filesVersion, setFilesVersion] = useState(0);
   const [build, setBuild] = useState<BuildState>({ phase: "idle" });
+  const [snapshot, setSnapshot] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState(data.files.length ? "preview" : "plan");
 
   const setPlan = useCallback((p: Plan | null, s: PlanStatus) => {
@@ -106,8 +110,10 @@ export function WorkspaceProvider({
       build,
       setBuild,
       filesVersion,
+      snapshot,
+      setSnapshot,
     }),
-    [data, plan, planStatus, files, modelId, activeTab, setPlan, setFiles, build, filesVersion],
+    [data, plan, planStatus, files, modelId, activeTab, setPlan, setFiles, build, filesVersion, snapshot],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

@@ -68,7 +68,12 @@ export function CodePanel({ pro }: { pro: boolean }) {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center justify-between border-b px-3 py-1.5">
-          <span className="truncate font-mono text-xs">{file?.path}</span>
+          <span className="truncate font-mono text-xs">
+            {file?.path}
+            {file?.path.startsWith("/dist/") ? (
+              <span className="label-mono ml-2 text-[var(--green)]">deploy output · what crawlers read</span>
+            ) : null}
+          </span>
           {pro && file ? (
             <div className="flex items-center gap-1">
               {draft === null ? (
@@ -84,7 +89,7 @@ export function CodePanel({ pro }: { pro: boolean }) {
                   >
                     <GitCompareIcon /> Diff
                   </Button>
-                  {file.path !== "/agents.ts" ? (
+                  {file.path !== "/agents.ts" && !file.path.startsWith("/dist/") ? (
                     <Button variant="ghost" size="xs" onClick={() => setDraft(file.content)}>
                       <PencilIcon /> Edit by hand
                     </Button>

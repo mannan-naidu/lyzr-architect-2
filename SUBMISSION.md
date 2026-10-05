@@ -32,10 +32,11 @@
      switch.
 5. **Agent memory toggle.** Each agent you build can remember its own end users. The switch
    compiles to each framework's native memory, and to Lyzr Cognis on Lyzr.
-6. **SEO + GEO toggle.**
-   - One switch adds meta tags, sitemap, robots, JSON-LD and `llms.txt`, so your app is found on
-     Google *and* quoted by ChatGPT, Perplexity and Claude.
-   - A 9-point score in Ship.
+6. **SEO + GEO from the start.** Switch it on when you create the project. Architect then builds the
+   site static-first (all content as real HTML on first load) and deploys a pre-rendered page with
+   meta tags, sitemap, robots, JSON-LD and `llms.txt`. Your site is found on Google *and* quoted by
+   ChatGPT, Perplexity and Claude. Ship gives you a report scored on the HTML crawlers actually
+   receive.
 7. **Content mode (CMS).** Pages, posts and FAQs editable without code, with **import from
    WordPress** (REST API). Published FAQs feed the GEO structured data.
 
@@ -109,7 +110,7 @@ It also adds:
    so you never pay for the same mistake twice."
 2. **(0:20) Familiar start.** Landing → Try the demo → workspace. The tour runs: chat, plan,
    preview, memory, ship. "Nothing new to learn."
-3. **(0:50) Plan.** Generate the plan. Point out "What I remembered" and the agents table. Approve
+3. **(0:50) Plan.** Show the SEO + GEO switch at the start (set when the project was created). Generate the plan. Point out "What I remembered" and the agents table. Approve
    & build.
 4. **(1:30) UI getting built.** The file checklist streams; the preview renders. In chat, ask two
    questions back to back: the second runs in parallel without interrupting the first.
@@ -120,7 +121,7 @@ It also adds:
    project. The decision log.
 7. **(3:20) Agents.** The graph, the memory toggle per agent, and the code switching between Lyzr,
    LangGraph, CrewAI and OpenAI Agents.
-8. **(3:50) Ship.** Security pre-check, SEO/GEO switch (the score jumps, show `llms.txt`), Deploy
+8. **(3:50) Ship.** Security pre-check, the SEO + GEO report (audited on the rendered HTML; show `/dist/index.html` and `llms.txt` in Code after deploying), Deploy
    (streamed logs, URL), GitHub push (open the real repo).
 9. **(4:30) Architecture.** The diagram: the memory layer, harness, gateway, and production
    scale-out (E2B, queue, proxies).

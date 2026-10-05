@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ModelUnavailableError, resolveModel } from "@/lib/ai/registry.server";
 import { agentsRuntimeFile } from "@/lib/build/agents-runtime";
 import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.server";
-import { BUILDER_INSTRUCTIONS, planToBuildPrompt } from "@/lib/build/prompts";
+import { BUILDER_INSTRUCTIONS, planToBuildPrompt, SEO_BUILD_RULES } from "@/lib/build/prompts";
 import { generatedFilesSchema, planSchema } from "@/lib/build/schemas";
 import { logEvent, normalizePath, recordUsage, saveFiles } from "@/lib/build/store.server";
 import type { BuildEvent } from "@/lib/build/types";
@@ -74,10 +74,15 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
           }
         }
 
-        send({ type: "status", message: "Writing the UI" });
+        send({
+          type: "status",
+          message: project.seo_enabled ? "Writing the UI static-first (SEO + GEO on)" : "Writing the UI",
+        });
         const result = streamText({
           model: resolved.model,
-          instructions: [BUILDER_INSTRUCTIONS, memoryContext].filter(Boolean).join("\n\n"),
+          instructions: [BUILDER_INSTRUCTIONS, project.seo_enabled ? SEO_BUILD_RULES : null, memoryContext]
+            .filter(Boolean)
+            .join("\n\n"),
           prompt: planToBuildPrompt(plan.data, decisions),
           output: Output.object({ schema: generatedFilesSchema }),
           maxOutputTokens: 16000,

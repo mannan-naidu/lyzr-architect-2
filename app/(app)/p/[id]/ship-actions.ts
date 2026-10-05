@@ -7,8 +7,9 @@ import { z } from "zod";
 import { generateAgentCode } from "@/lib/agents/codegen";
 import { planSchema } from "@/lib/build/schemas";
 import { decryptToken } from "@/lib/github/crypto.server";
-import { seoAudit, seoFiles } from "@/lib/ship/seo";
+import { prerenderedDocument, seoAudit, seoFiles, visibleWords } from "@/lib/ship/seo";
 import { securityScan } from "@/lib/ship/security";
+import { saveFiles } from "@/lib/build/store.server";
 import { createClient } from "@/lib/supabase/server";
 import type { AgentFramework, CmsEntry, Json } from "@/lib/types/database";
 
@@ -52,11 +53,14 @@ async function faqsFor(supabase: Awaited<ReturnType<typeof createClient>>, proje
  * Hosting itself is simulated in the prototype (README "Real vs simulated"); production would
  * hand the build to Vercel's deployments API. High-severity findings block the deploy.
  */
-export async function deployProject(input: { projectId: string; force?: boolean }) {
-  const { projectId, force } = z.object({ projectId: projectIdSchema, force: z.boolean().optional() }).parse(input);
+export async function deployProject(input: { projectId: string; force?: boolean; html?: string }) {
+  const { projectId, force, html } = z
+    .object({ projectId: projectIdSchema, force: z.boolean().optional(), html: z.string().max(400_000).optional() })
+    .parse(input);
   const loaded = await loadProject(projectId);
   if (!loaded) return { error: "Project not found." };
-  const { supabase, project, files, plan } = loaded;
+  const { supabase, project, plan } = loaded;
+  const files = loaded.files.filter((f) => !f.path.startsWith("/dist/"));
   if (!files.length) return { error: "Build the app before deploying." };
 
   const findings = securityScan(files);
@@ -65,16 +69,35 @@ export async function deployProject(input: { projectId: string; force?: boolean 
 
   const slug = project.deploy_slug ?? `${slugify(plan?.title ?? project.name)}-${projectId.slice(0, 6)}`;
   const url = `https://${slug}.architect.run`;
-  const { score } = seoAudit(files, project.seo_enabled);
-  const extra = project.seo_enabled ? Object.keys(seoFiles(plan, project.name, url)) : [];
+  const { score } = seoAudit({ files, seoEnabled: project.seo_enabled, html: html ?? null });
   const runId = crypto.randomUUID();
+
+  // SEO + GEO: ship a pre-rendered index.html (the preview's rendered HTML inside a full <head>),
+  // plus robots, sitemap and llms.txt, saved as /dist/* so they're visible in Code and pushed to GitHub.
+  let seoLines = ["SEO + GEO: off (client-rendered shell)"];
+  let dist: { path: string; content: string }[] = [];
+  if (project.seo_enabled) {
+    const generated = seoFiles(plan, project.name, url, await faqsFor(supabase, projectId));
+    const { "/head.html": head, ...rest } = generated;
+    dist = [
+      ...(html ? [{ path: "/dist/index.html", content: prerenderedDocument(head, html) }] : []),
+      ...Object.entries(rest).map(([p, content]) => ({ path: `/dist${p}`, content })),
+    ];
+    await saveFiles(supabase, projectId, dist);
+    seoLines = [
+      html
+        ? `Pre-rendered /index.html: ${visibleWords(html)} words of content readable without JavaScript`
+        : "Pre-render skipped: open the Preview once so Architect can capture the rendered page",
+      `SEO + GEO: generated ${Object.keys(rest).map((p) => p.slice(1)).join(", ")}, meta tags and JSON-LD`,
+    ];
+  }
   const lines = [
     `Cloning project ${project.name} (${files.length} files)`,
     "Installing dependencies: react, react-dom, tailwindcss",
     `Security pre-check: ${findings.length ? `${findings.length} finding(s)${high.length ? ", deploying anyway (forced)" : ""}` : "passed"}`,
-    project.seo_enabled ? `SEO/GEO: generated ${extra.join(", ")}` : "SEO/GEO: off",
-    `SEO/GEO score: ${score}/100`,
     "Building production bundle",
+    ...seoLines,
+    `SEO + GEO score: ${score}/100`,
     "Uploading static assets to the edge",
     `Agents endpoint ready: ${url}/agents`,
     `Live at ${url}`,
@@ -99,7 +122,7 @@ export async function deployProject(input: { projectId: string; force?: boolean 
     { project_id: projectId, run_id: runId, kind: "deploy", title: `Deployed to ${url}`, detail: { seo_score: score } },
   ]);
   revalidatePath(`/p/${projectId}`);
-  return { ok: true as const, deployment };
+  return { ok: true as const, deployment, dist };
 }
 
 export async function listDeployments(input: { projectId: string }) {
@@ -186,13 +209,13 @@ export async function pushToGitHub(input: { projectId: string; repoName?: string
 
     const agentCode = generateAgentCode(project.framework as AgentFramework, plan?.agents ?? [], plan?.title ?? project.name);
     const all: { path: string; content: string }[] = [
-      ...files.map((f) => ({ path: `src${f.path}`, content: f.content })),
+      ...files.map((f) => ({ path: f.path.startsWith("/dist/") ? f.path.slice(1) : `src${f.path}`, content: f.content })),
       { path: agentCode.filename, content: agentCode.code },
       {
         path: "README.md",
         content: `# ${plan?.title ?? project.name}\n\n${plan?.summary ?? project.description ?? ""}\n\nBuilt with [Architect](https://github.com/mannan-naidu/lyzr-architect-2). The UI is in \`src/\` (React + Tailwind); the agents are in \`${agentCode.filename}\`.\n`,
       },
-      ...(project.seo_enabled
+      ...(project.seo_enabled && !files.some((f) => f.path.startsWith("/dist/"))
         ? Object.entries(seoFiles(plan, project.name, `https://${project.deploy_slug ?? "app"}.architect.run`)).map(([p, c]) => ({
             path: `public${p}`,
             content: c,
