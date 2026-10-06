@@ -115,3 +115,38 @@ AI's own mistakes and doom loops; 11+ rival submissions already lead with "two m
 **Decision.** Lead with memory-powered features (fix memory and loop breaker, fair-billing ledger,
 builder memory and decision log, visible memory, agent memory toggle, SEO/GEO toggle). The Simple/Pro
 lenses and other shared features are presented last.
+
+---
+
+## ADR-006: Builder memory on Lyzr Cognis, as a Docker service on AWS
+
+- **Date:** 2026-10-06
+- **Status:** Accepted (supersedes ADR-003; refines ADR-004)
+
+**Context.**
+- On the live Vercel deployment, Memori's prebuilt native engine failed to load with
+  `undefined symbol: __isoc23_strtoll`. It's linked against glibc 2.38+, while Vercel's function
+  runtime (Amazon Linux 2023) has glibc 2.34, and no configuration can fix that.
+- Lyzr's own memory engine, **Cognis**, is open source (`lyzr-cognis`, MIT). It does LLM fact
+  extraction with versioned updates, and hybrid vector + BM25 search. But it's Python and keeps its
+  index in local files.
+
+**Decision.** Use Cognis as the single builder-memory engine, running as `memory-service/`:
+- FastAPI in Docker, with Caddy for HTTPS, on one AWS EC2 instance in ap-south-1, next to Supabase.
+- The Next.js app on Vercel calls it over HTTPS with a bearer token through `MemoryProvider`.
+- Extraction uses Groq (via LiteLLM); embeddings use Gemini.
+- Edits reuse Cognis's update path: close the old version, store the new text re-embedded.
+- Memori and its dependencies are removed.
+
+**Consequences.**
+- ✅ Architect's builder memory runs on Lyzr's own memory engine. It's semantic (vector + BM25)
+  and versioned, not plain string matching.
+- ✅ It demonstrates the production split: stateless web on Vercel, stateful services in Docker on
+  AWS. The same image runs on any cloud.
+- ✅ Memory failures degrade gracefully: chat continues and shows "memory unavailable".
+- ⚠️ One more thing to run: an EC2 instance (covered by AWS free-plan credits), plus a
+  `MEMORY_SERVICE_TOKEN` to keep secret.
+- ⚠️ A single instance holds the index. Scaling out means sharding users across instances or moving
+  to a Qdrant cluster (ARCHITECTURE.md §13).
+- ⚠️ Edit uses Cognis internals (pinned to `lyzr-cognis==1.0.0`), because the open-source version
+  has no public update method.

@@ -6,7 +6,7 @@
 assignment (brief: https://hiring.lyzrarchitect.space/). It extends architect.new and serves both
 non-technical users and developers.
 
-**Angle: "Architect remembers, so you never pay for the same mistake twice."** Persistent memory via **Memori** (Postgres-based, open source; Lyzr Cognis named for production, ADR-004). The
+**Angle: "Architect remembers, so you never pay for the same mistake twice."** Persistent memory via **Lyzr Cognis** (open source) running in `memory-service/` (Docker on AWS EC2, ADR-006). The
 builder agent remembers each user's project decisions, preferences and past fixes across sessions.
 Users can toggle memory on for the agents they build. A Memory panel shows what is stored and lets
 users edit or delete it.
@@ -28,7 +28,7 @@ The original kickoff brief lives in `docs/KICKOFF.md`. **Scope, feature list and
 | Hosting | Vercel (auto-deploys from `main`; branches get preview URLs) |
 | Auth | Supabase Auth with Google + GitHub OAuth (GitHub `repo` scope so we can push later) |
 | Database | Supabase Postgres, with migrations in `supabase/migrations/` |
-| Memory | Memori (`@memorilabs/memori`) on the same Postgres, in its own schema; Memori Cloud as fallback |
+| Memory | Lyzr Cognis (`lyzr-cognis`, Python) in `memory-service/`: FastAPI + Docker on AWS EC2, called via `MemoryProvider` (ADR-006) |
 | LLM | Vercel AI SDK with a provider switcher (Anthropic, OpenAI, Google, Groq, OpenRouter) |
 | Live preview | Sandpack (later session) |
 | GitHub | Octokit (later session) |
@@ -57,7 +57,8 @@ lib/
   utils.ts                 # cn() helper
 proxy.ts                   # Next 16 "middleware" — refreshes session, guards app routes
 supabase/migrations/       # SQL migrations (source of truth for schema + RLS)
-scripts/                   # one-off scripts (e.g. memori-spike.ts)
+scripts/                   # one-off scripts
+memory-service/            # Cognis memory service (FastAPI, Dockerfile, compose + Caddy, setup.sh for EC2)
 docs/                      # PLAN.md (scope + sessions + owner notes log), RESEARCH.md (market, competitors, hosting), EXPLORATION.md (manual platform tour), COMPETITORS.md (rival submissions), decisions.md (ADRs), SETUP.md, memori-spike.md, KICKOFF.md
 ARCHITECTURE.md            # the graded architecture write-up
 ```
@@ -73,7 +74,6 @@ ARCHITECTURE.md            # the graded architecture write-up
 | Typecheck | `pnpm typecheck` |
 | DB migrate (linked Supabase project) | `pnpm db:migrate` (runs `supabase db push`) |
 | New migration | `pnpm dlx supabase migration new <name>` |
-| Memori spike | `pnpm tsx scripts/memori-spike.ts` |
 
 ## Conventions
 
@@ -97,7 +97,7 @@ ARCHITECTURE.md            # the graded architecture write-up
 | Auth (Supabase + GitHub OAuth) | E2B sandbox |
 | Database (Supabase Postgres + RLS) | Multi-framework agent runs (LangGraph, CrewAI, OpenAI Agents) |
 | LLM chat (Vercel AI SDK, multi-provider) | Deploy logs |
-| Memori memory | |
+| Cognis memory service (AWS) | |
 | Live preview (Sandpack) | |
 | GitHub push (Octokit) | |
 

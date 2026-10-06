@@ -6,8 +6,8 @@ import type { StoredMemory } from "@/lib/memory/types";
 import { getMemoryProvider, getMemoryStatus } from "@/lib/memory/provider.server";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
-// The Memory panel's controls. Memori lives outside Supabase RLS, so every action first checks
-// that the signed-in user owns the project, and every provider call is scoped to that user's id.
+// The Memory panel's controls. The memory service lives outside Supabase RLS, so every action
+// first checks that the signed-in user owns the project, and every call is scoped to that user's id.
 
 const projectIdSchema = z.uuid();
 const memoryIdSchema = z.string().trim().min(1).max(64);

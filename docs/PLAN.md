@@ -342,6 +342,7 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-06 | One memory system only, not plain Postgres; use **Lyzr Cognis** (open source); host the backend with **Docker on AWS free tier** and explain why not everything is on Vercel | `memory-service/` (FastAPI + Cognis + Caddy, EC2 setup script); Memori removed; ADR-006; ARCHITECTURE §4, §12 | 🔨 code done; EC2 launch pending |
 | 2026-10-05 | SEO + GEO must be chosen **at the start** (not in Ship) and produce a predominantly **HTML** page; report at the end | New-project dialog + Plan switch; static-first build rules; pre-render snapshot → `/dist/index.html`; Ship shows only the report (audited on rendered HTML) | ✅ built |
 | 2026-10-05 | "Build everything except Vercel; I'll host tomorrow" | Workspace: plan → build → preview → fix memory/loop breaker; Memory tab (memories, decisions, fixes, billing ledger); Agents (graph, memory toggle, 5 framework targets); Ship (security, SEO/GEO, deploy, GitHub push); Content (CMS + WordPress import); Pro logs/trace; ARCHITECTURE.md + diagram; SUBMISSION.md | ✅ built; deploy checklist in SUBMISSION.md |
 | 2026-10-05 | UI theme after **rig.ai**; keep the generic vibe-coding flow (low learning curve); **quick tour** at start; mention both in the submission | theme tokens + landing/login/dashboard/workspace restyle; `components/product-tour.tsx`; README "Design principles" | ✅ built |

@@ -4,12 +4,12 @@ import type { RecalledMemory, StoredMemory } from "@/lib/memory/types";
 
 /**
  * Pluggable memory layer (ADR-004). The chat route and Memory panel depend only on this
- * interface: Memori backs it in the prototype; Lyzr Cognis is the production option.
+ * interface. It's backed by Lyzr Cognis (open source) running as a separate service (ADR-006).
  */
 export type MemoryAttribution = {
   /** Auth user id: builder memory follows the user across projects. */
   userId: string;
-  /** Project id: recorded as Memori's `process`; also used for the decision log. */
+  /** Project id: Cognis's `session_id`, so we know where a fact was learned. */
   projectId: string;
   /** Chat thread id (one per project for now). */
   sessionId: string;
@@ -58,60 +58,28 @@ export const noopMemory: MemoryProvider = {
   },
 };
 
-let provider: Promise<MemoryProvider | null> | undefined;
-let lastInitError: string | null = null;
-
-/** An error's message plus its causes (native loaders attach the real load errors as `cause`). */
-function errorChain(err: unknown, depth = 0): string {
-  if (depth > 3 || err == null) return "";
-  if (Array.isArray(err)) return err.map((e) => errorChain(e, depth + 1)).filter(Boolean).join(" | ");
-  if (err instanceof Error) {
-    const cause = errorChain((err as Error & { cause?: unknown }).cause, depth + 1);
-    return cause ? `${err.message} <- ${cause}` : err.message;
-  }
-  return String(err);
-}
-
-/** Strip anything that looks like a connection string or credential from an error message. */
-function scrub(message: string): string {
-  return message.replace(/postgres(ql)?:\/\/[^\s"']+/gi, "postgres://***").slice(0, 1200);
-}
 
 /** Why memory is or isn't available, for the Memory tab and /api/health. Never includes secrets. */
 export async function getMemoryStatus(): Promise<
   { status: "ok"; backend: string } | { status: "not_configured" } | { status: "error"; error: string }
 > {
-  if (!process.env.DATABASE_URL) return { status: "not_configured" };
-  const p = await getMemoryProvider();
-  if (p) return { status: "ok", backend: p.name };
-  return { status: "error", error: lastInitError ?? "Memory failed to start." };
+  const url = process.env.MEMORY_SERVICE_URL;
+  if (!url || !process.env.MEMORY_SERVICE_TOKEN) return { status: "not_configured" };
+  const { pingCognis } = await import("@/lib/memory/cognis.server");
+  if (!(await pingCognis(url))) return { status: "error", error: "The memory service isn't responding." };
+  return { status: "ok", backend: "cognis" };
 }
 
 /**
- * The configured provider, or null if none is available (no DATABASE_URL). Created once per
- * server process: Memori's native engine and embedding model are expensive to load.
+ * The memory provider, or null when the memory service isn't configured
+ * (MEMORY_SERVICE_URL + MEMORY_SERVICE_TOKEN). It's a thin HTTP client, so creating it is cheap.
  */
-export function getMemoryProvider(): Promise<MemoryProvider | null> {
-  if (!provider) {
-    provider = (async () => {
-      if (!process.env.DATABASE_URL) return null;
-      // Memori's engine downloads its embedding model (~87 MB) to ./.fastembed_cache. Serverless
-      // filesystems are read-only except /tmp, so point the cache there (kept while the instance is warm).
-      if (process.env.VERCEL && !process.env.FASTEMBED_CACHE_DIR) {
-        process.env.FASTEMBED_CACHE_DIR = "/tmp/fastembed_cache";
-      }
-      const { createMemoriProvider } = await import("@/lib/memory/memori.server");
-      const created = await createMemoriProvider(process.env.DATABASE_URL);
-      lastInitError = null;
-      return created;
-    })().catch((err: unknown) => {
-      lastInitError = scrub(errorChain(err));
-      console.error("[memory] provider init failed:", lastInitError);
-      provider = undefined; // retry on the next request
-      return null;
-    });
-  }
-  return provider;
+export async function getMemoryProvider(): Promise<MemoryProvider | null> {
+  const url = process.env.MEMORY_SERVICE_URL?.trim();
+  const token = process.env.MEMORY_SERVICE_TOKEN?.trim();
+  if (!url || !token) return null;
+  const { createCognisProvider } = await import("@/lib/memory/cognis.server");
+  return createCognisProvider(url, token);
 }
 
 /** Build the instruction block injected before the model call. */

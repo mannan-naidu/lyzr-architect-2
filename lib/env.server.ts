@@ -22,16 +22,14 @@ const LLM_KEYS = [
 const serverSchema = publicSchema
   .extend({
     SUPABASE_SERVICE_ROLE_KEY: nonEmpty,
-    DATABASE_URL: z
-      .string()
-      .trim()
-      .regex(/^postgres(ql)?:\/\//, "must be a postgres:// connection string"),
+    /** Builder memory: the Cognis memory service (memory-service/, on AWS). Optional. */
+    MEMORY_SERVICE_URL: z.url().optional(),
+    MEMORY_SERVICE_TOKEN: optionalKey,
     ANTHROPIC_API_KEY: optionalKey,
     OPENAI_API_KEY: optionalKey,
     GOOGLE_GENERATIVE_AI_API_KEY: optionalKey,
     GROQ_API_KEY: optionalKey,
     OPENROUTER_API_KEY: optionalKey,
-    MEMORI_API_KEY: optionalKey,
   })
   .superRefine((env, ctx) => {
     if (!LLM_KEYS.some((key) => env[key])) {

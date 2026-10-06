@@ -1,0 +1,33 @@
+# Memory service + Caddy (automatic HTTPS). Run on the server with: docker compose up -d --build
+services:
+  memory:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - cognis-data:/data          # memories survive restarts and redeploys
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - memory
+
+volumes:
+  cognis-data:
+  caddy-data:

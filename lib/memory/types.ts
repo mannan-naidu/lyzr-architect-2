@@ -32,10 +32,12 @@ export type UsagePartData = {
 export type StoredMemory = {
   id: string;
   content: string;
-  /** How many times this fact was observed / reinforced. */
-  timesSeen: number;
+  /** Cognis category, e.g. "preferences", "work_career". */
+  category: string | null;
+  /** 1 for an original fact; increases each time it's corrected (by the user or the model). */
+  version: number;
   createdAt: string;
-  lastSeenAt: string;
-  /** Learned (at least partly) in the current project. */
+  updatedAt: string;
+  /** Learned in the current project. */
   inProject: boolean;
 };

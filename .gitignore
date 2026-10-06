@@ -43,3 +43,7 @@ next-env.d.ts
 
 # Memori / fastembed embedding model cache (downloaded at runtime)
 .fastembed_cache/
+
+# memory service secrets (on the server only)
+memory-service/.env
+__pycache__/

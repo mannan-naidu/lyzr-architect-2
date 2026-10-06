@@ -1,0 +1,5 @@
+# HTTPS with a free Let's Encrypt certificate for <ip-with-dashes>.sslip.io (set by setup.sh).
+{$DOMAIN} {
+	encode gzip
+	reverse_proxy memory:8000
+}

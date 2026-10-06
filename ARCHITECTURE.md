@@ -50,7 +50,7 @@ standard build loop:
 - **Builder memory** and a **decision log** stop it re-asking what you already settled.
 - **Visible memory** shows, edits and deletes all of the above.
 
-You can switch memory on for the agents you build (Memori in the prototype, Lyzr Cognis in
+Builder memory runs on Lyzr Cognis (open source), and you can switch memory on for the agents you build (Cognis in
 production). Everything else follows the familiar vibe-coding flow (prompt → plan → build →
 preview → deploy), so there's nothing new to learn.
 
@@ -175,12 +175,12 @@ flowchart LR
     SA["Server actions<br/>approve · memory · ship · cms"]
     HAR["Agent harness<br/>plan → build → verify → fix"]
     GW["Model gateway<br/>AI SDK registry · caps · ledger"]
-    MP["MemoryProvider<br/>Memori ⇄ Cognis"]
+    MP["MemoryProvider<br/>(Cognis client)"]
   end
 
   subgraph Data["Supabase"]
     PG[("Postgres + RLS<br/>projects · files · run_events<br/>fix_attempts · decisions · ledger")]
-    MEM[("memori schema<br/>facts · mentions · embeddings")]
+    MEM[("Cognis memory service<br/>AWS EC2 · Docker<br/>vectors + BM25")]
     AUTH["Auth<br/>GitHub · Google · anonymous"]
   end
 
@@ -211,7 +211,7 @@ flowchart LR
 | Web app | Next.js 16 App Router on Vercel, server components by default | Same | Streaming RSC, edge network, preview deploys per branch |
 | Auth | Supabase Auth: GitHub, Google, anonymous demo | + email and SSO for orgs | Postgres-native RLS uses the same JWT |
 | Database | Supabase Postgres, owner-only RLS on every table | + read replicas, Supavisor pooling | RLS is the security boundary; no hand-rolled access checks to forget |
-| Memory | Memori (BYODB) in a `memori` schema on the same Postgres | `MemoryProvider` → Lyzr Cognis (Lyzr ecosystem) or Memori | One interface, swappable (ADR-004) |
+| Memory | Lyzr Cognis (open source) in a Docker service on AWS EC2, called over HTTPS (ADR-006) | Same service, scaled out; or hosted Cognis inside Lyzr | Lyzr's own memory engine; needs a disk and a warm process that Vercel lacks |
 | Harness | In the route handler (one request per run, streamed) | Queue + workers (long-running, resumable) | Serverless time limits; fairness |
 | Sandbox | Sandpack (browser bundler) | E2B Firecracker microVM per project | Real Node/Python, agents can execute, network egress control |
 | Models | Vercel AI SDK with 5 providers, structured output | + capability routing, fallbacks, BYOK, cache | Model-agnostic by construction |
@@ -240,10 +240,10 @@ There are **four kinds of memory**, each stored where it fits best:
 
 | Memory | What it holds | Store | Scope | Read by |
 | --- | --- | --- | --- | --- |
-| **Builder memory** | Durable facts about how this user builds ("deploys on Vercel", "hates modals") | Memori `memori_entity_fact` (+ embeddings) | User, across projects | Plan, build, fix, chat (semantic recall) |
+| **Builder memory** | Durable facts about how this user builds ("deploys on Vercel", "hates modals") | Cognis memory service (vectors + BM25) | User, across projects | Plan, build, fix, chat (hybrid recall) |
 | **Decision log** | Settled project decisions ("Auth: none for v1") | `public.decisions` | Project | Every turn, always injected (not just recalled) |
 | **Fix memory** | error signature → attempted fix → outcome | `public.fix_attempts` | User, across projects | `/fix`, by exact signature |
-| **Agent memory** | What each built agent remembers about *its* end users | Memori / Cognis, keyed by the app's end user | Per app end user | The deployed agents (toggle per agent) |
+| **Agent memory** | What each built agent remembers about *its* end users | Cognis, keyed by the app's end user | Per app end user | The deployed agents (toggle per agent) |
 
 **Why split them?** Semantic recall is fuzzy: right for preferences, wrong for decisions, which
 must *always* apply, and wrong for fixes, which must match *exactly*. Fix memory is a deterministic
@@ -252,25 +252,33 @@ lookup:
   then takes a sha256 prefix.
 - The same bug in a different project, or a week later, hits the same row.
 
-**Attribution in Memori:** entity = the user's id, session = the project id. A fact's *mentions*
-link it to the sessions it was seen in, which is how the Memory tab knows "learned in this project"
-vs "from another project", and how **Forget this project** removes facts seen *only* here while
-keeping shared ones.
+**Builder memory = Lyzr Cognis (ADR-006).** Architect runs the open-source Cognis engine
+(`lyzr-cognis`, MIT) in its own service, `memory-service/`: FastAPI in Docker on AWS EC2, behind
+Caddy for HTTPS. The Next.js app calls it through `MemoryProvider` with a bearer token.
+- **Scoping:** owner = the user, agent = `architect-builder` (so facts follow the user across
+  projects), session = the project. That's how the Memory tab knows "learned in this project" vs
+  "from another project", and how *Forget this project* removes only facts learned here.
+- **Capture:** after each turn, the app hands the exchange to the service, which queues it and
+  answers immediately. A background worker runs Cognis's pipeline:
+  1. An LLM (GPT-OSS 20B on Groq, via LiteLLM) extracts facts and files them in 13 categories.
+  2. Each fact is embedded (Gemini, 768-d and 256-d Matryoshka vectors).
+  3. The model decides ADD / UPDATE / CONTRADICT / DELETE against similar existing memories, so
+     facts are versioned instead of duplicated.
+- **Recall:** hybrid search: vector similarity (70%) fused with BM25 keyword match (30%) by
+  Reciprocal Rank Fusion, plus a recency boost.
+- **Edit:** uses Cognis's own update path. The old version is closed (kept as history) and the
+  new text is stored re-embedded, linked to the old one, so recall matches the new meaning.
+- **Why a separate service:** Cognis keeps its index in local files (in-process Qdrant + SQLite),
+  so it needs a persistent disk and a long-lived process. Vercel functions are stateless,
+  read-only and short-lived (§12).
 
 **Visible memory UX:**
 - Every reply has a collapsible *"Remembered N things"* dropdown showing exactly what was recalled,
   with relevance.
 - The plan shows the memories that shaped it.
-- The Memory tab lists everything, with source project, times seen and last seen, plus edit,
+- The Memory tab lists everything, with source project, category and version, plus edit,
   delete and forget project.
 - A per-project switch pauses memory entirely.
-
-**Fact extraction (Memori):** extraction ("augmentation") runs asynchronously after the reply, so it
-adds no latency. In the prototype, Memori's hosted augmentation endpoint does the extraction; the
-facts and embeddings are stored in our Postgres.
-- Production on Lyzr: Cognis provides the same contract natively.
-- Self-hosted alternative: run the extraction prompt through our own model gateway, which keeps the
-  extraction data inside our boundary.
 
 **Agent memory toggle:**
 - Each agent in the Agents tab has a Memory switch, stored in `agent_spec`.
@@ -551,11 +559,31 @@ There are three different proxies. Each has one job.
 | --- | --- | --- |
 | Web + API | Vercel (Fluid compute), auto-deploy from `main`, preview per branch | Stateless; scales horizontally |
 | Postgres, Auth, Storage | Supabase (Pro), Supavisor pooling, PITR backups | `supabase/migrations` is the schema source of truth |
-| Memory | `memori` schema on the same Postgres → Cognis on Lyzr | Isolated schema; separate pool |
+| Memory | **AWS EC2 (Mumbai, next to Supabase): Docker Compose with the Cognis memory service + Caddy (Let's Encrypt HTTPS)** | Persistent volume for the index; one-command `setup.sh`; same image runs on any cloud |
 | Queue + rate limits | Upstash Redis / SQS | Production |
 | Workers | Fly Machines / ECS, autoscaled on queue depth | Production |
 | Sandboxes | E2B | Production |
 | Observability | OpenTelemetry → Grafana/Honeycomb, Sentry, PostHog | Trace ids link UI → run → model call |
+
+**Why the whole platform isn't on Vercel.** Vercel is the right home for the web tier: pages, sign-in
+and short, streaming API calls that finish in seconds and scale per request. It's the wrong home
+for anything that needs:
+1. **A persistent disk.** Functions have a read-only filesystem (only `/tmp`, wiped between
+   instances). Cognis keeps its vector index and SQLite store in files.
+2. **A warm, long-lived process.** Every cold start would reload the memory engine and its index.
+   A container keeps them in memory between requests.
+3. **A chosen operating system.** Native engines are compiled against specific system libraries.
+   We hit this directly: the first memory engine we tried (Memori) needs glibc 2.38, and Vercel's
+   runtime ships 2.34, so it couldn't load (`undefined symbol: __isoc23_strtoll`). A Docker image
+   pins the OS.
+4. **Independent scaling and failure.** The stateful memory tier scales and fails separately from
+   the stateless web tier. If memory is down, chat still works and simply reports "memory
+   unavailable".
+
+So the prototype already has the production shape on a small scale: **Vercel (stateless web + API)
+→ HTTPS → AWS (stateful services in Docker) → Supabase (Postgres + Auth)**. The harness workers and
+sandboxes in §9 slot into the same AWS tier. The memory service image runs unchanged on ECS
+Fargate, Cloud Run or Kubernetes.
 
 ---
 
@@ -571,7 +599,7 @@ There are three different proxies. Each has one job.
 | Sandboxes | Cost and cold start | Warm pool sized to p95 starts per minute; pause on idle (paused VMs cost storage only) | 5k open projects → ~1.5k running, rest paused; ≈ $0.05–0.10 per running sandbox-hour (estimate) |
 | LLM | Provider rate limits (TPM) | Pooled keys per provider, spread across providers via the gateway, backpressure (queue, not error), smaller models for small steps, prompt caching | 750 runs × 25k tokens / 40 s ≈ 470k TPM peak, so several provider tiers or multiple providers |
 | Postgres | Connections | Supavisor transaction pooling; RLS with an indexed `owner_id`; `run_events` partitioned by month; read replicas for dashboards | Writes ≈ 750 runs × 20 events / 40 s ≈ 375 inserts/s, comfortable |
-| Memory | Recall latency and embedding compute | Recall runs in parallel with plan setup; embeddings cached per fact; Memori engine as a long-lived service in production, not per function | p95 recall < 150 ms target |
+| Memory | One process owns a local vector index | Partition users across memory-service shards (consistent hash on user id), each with its own volume; or swap the local Qdrant for a Qdrant cluster; capture is queued, so recall never waits on extraction | One t3.small handles the demo; ~1 shard per 50k users (estimate) |
 | Preview | WebSocket fan-out | Edge proxy; sandboxes serve their own HMR | — |
 
 **Cost control:** the token ledger is real-time, so caps are enforced *before* a call. Self-fix
@@ -586,10 +614,11 @@ fix memory reduces repeat fixes, and the loop breaker caps them at 3 per error.
   - child tables (files, events, fixes, decisions, CMS) use a `security definer` function,
     `owns_project()`;
   - the service-role key is never used for user requests.
-- **Memori** sits outside RLS, so every Memory action:
-  - first proves ownership of the project through RLS;
-  - then scopes every SQL statement to `memori_entity.external_id = auth user id`.
-  - Cross-user isolation is tested.
+- **The memory service** sits outside RLS, so:
+  - every Memory action first proves ownership of the project through RLS;
+  - every call to the service is scoped to the signed-in user's id;
+  - the service accepts only requests with the shared bearer token (constant-time compare), over
+    HTTPS only. Cross-user isolation is tested.
 - **Secrets:** env vars only, never `NEXT_PUBLIC_*`. GitHub tokens are AES-256-GCM encrypted with a
   dedicated key. Errors returned to the client never include upstream payloads.
 - **Input validation:** zod on every server action, route body and env var.
@@ -645,9 +674,8 @@ erDiagram
   }
 ```
 
-The Memori tables (`memori_entity`, `memori_entity_fact`, `memori_entity_fact_mention`,
-`memori_session`, `memori_conversation`, …) live in their own `memori` schema and are managed by
-Memori.
+Builder memories don't live in Postgres. They're in the Cognis memory service's own store
+(SQLite + local Qdrant on a Docker volume on EC2).
 
 ---
 
@@ -661,7 +689,7 @@ Memori.
 | Plan → approve → build, typed and streamed | Lyzr / LangGraph / CrewAI runtimes (code is generated for real) |
 | Live preview (Sandpack) with error capture | GitHub App + webhooks (OAuth token used instead) |
 | Fix memory, loop breaker, rollback, fair-billing ledger | |
-| Memori builder memory: recall, capture, list/edit/delete/forget | |
+| Builder memory on Lyzr Cognis (AWS service): capture, hybrid recall, list/edit/delete/forget | |
 | Decision log, trace and logs, diffs, edit by hand | |
 | Framework code generation (5 targets), agent memory toggle | |
 | GitHub push (Octokit, one commit), repo listing | |
@@ -685,5 +713,5 @@ Memori.
 ---
 
 *See also: [`docs/PLAN.md`](docs/PLAN.md) (scope), [`docs/decisions.md`](docs/decisions.md) (ADRs),
-[`docs/memori-spike.md`](docs/memori-spike.md) (memory spike), [`docs/RESEARCH.md`](docs/RESEARCH.md)
+[`docs/memori-spike.md`](docs/memori-spike.md) (the earlier Memori spike), [`docs/RESEARCH.md`](docs/RESEARCH.md)
 (market research), [`SUBMISSION.md`](SUBMISSION.md) (form answers).*

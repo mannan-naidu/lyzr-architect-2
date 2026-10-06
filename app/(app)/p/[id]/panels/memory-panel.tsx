@@ -146,7 +146,7 @@ function MemoryList() {
   if (state.backend === "none") {
     return (
       <EmptyNote>
-        No memory backend is configured on this deployment (set <code>DATABASE_URL</code> to enable Memori).
+        Memory isn&apos;t connected on this deployment (set <code>MEMORY_SERVICE_URL</code> and <code>MEMORY_SERVICE_TOKEN</code> for the Cognis memory service).
       </EmptyNote>
     );
   }
@@ -221,8 +221,9 @@ function MemoryList() {
                   <p className="text-sm">{m.content}</p>
                 )}
                 <p className="label-mono mt-1 text-muted-foreground">
-                  {m.inProject ? "learned in this project" : "from another project"} · seen {m.timesSeen}× · last{" "}
-                  {new Date(m.lastSeenAt).toLocaleDateString()}
+                  {m.inProject ? "learned in this project" : "from another project"}
+                  {m.category ? ` · ${m.category.replace("_", " ")}` : ""}
+                  {m.version > 1 ? ` · edited (v${m.version})` : ""} · {new Date(m.updatedAt).toLocaleDateString()}
                 </p>
               </div>
               {editing?.id === m.id ? null : (
@@ -250,7 +251,9 @@ function MemoryList() {
           ))}
         </ul>
       )}
-      <p className="label-mono text-muted-foreground">Backend: {state.backend} · Postgres · scoped to your account</p>
+      <p className="label-mono text-muted-foreground">
+        Lyzr Cognis · hybrid vector + keyword search · scoped to your account
+      </p>
     </div>
   );
 }

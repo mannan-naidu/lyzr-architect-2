@@ -4,7 +4,7 @@
 and developers. Describe the agent you want, and Architect plans it, writes the files and shows a
 live preview. **Simple mode** is just chat plus preview. **Pro mode** adds the file tree, diffs,
 logs and the agent's trace. What makes it different is that **Architect remembers**. Using
-[Memori](https://github.com/MemoriLabs/Memori) on Postgres, the builder agent keeps each user's
+[Lyzr Cognis](https://docs.lyzr.ai/cognis/overview) (open source, running as a Docker service on AWS), the builder agent keeps each user's
 project decisions, preferences and past fixes across sessions. Users can also give the agents they
 build their own memory, and a Memory panel shows exactly what is stored so they can edit or delete
 it. It's built for Lyzr's TPM assignment and extends architect.new.
@@ -38,7 +38,7 @@ it. It's built for Lyzr's TPM assignment and extends architect.new.
 | Plan → build | ✅ Real | Typed plan (structured output), approve, streamed file generation |
 | Live preview | ✅ Real | Sandpack (in-browser bundler) with error capture |
 | Fix memory + loop breaker | ✅ Real | Error signatures across projects, 3-try limit, rollback, self-fixes billed to the agent |
-| Builder memory | ✅ Real | Memori in the `memori` schema; Memory tab lists, edits, deletes and forgets |
+| Builder memory | ✅ Real | Lyzr Cognis (open source) in `memory-service/`: Docker on AWS EC2, hybrid vector + BM25 recall; Memory tab lists, edits (re-embeds), deletes and forgets |
 | Decision log, ledger, trace, diffs | ✅ Real | `decisions`, `messages`, `run_events`, `project_files.previous_content` |
 | Agents | ✅ Real (code) / 🟡 Simulated (runs) | Code generated for Lyzr, LangGraph, CrewAI, OpenAI Agents SDK, TS; preview runs via `/agents.ts` simulator |
 | GitHub push | ✅ Real | Octokit, one commit per push; token AES-256-GCM encrypted |
@@ -71,9 +71,8 @@ Useful scripts:
 | `pnpm lint` | ESLint |
 | `pnpm typecheck` | Route type generation + `tsc --noEmit` |
 | `pnpm db:migrate` | `supabase db push` to the linked project |
-| `pnpm tsx scripts/memori-spike.ts` | Memori store-and-recall spike ([results](docs/memori-spike.md)) |
 
 ## Stack
 
 Next.js 16 (App Router) · TypeScript (strict) · Tailwind v4 · shadcn/ui · Supabase (Auth + Postgres)
-· Memori · Vercel AI SDK · Sandpack · Octokit · Vercel · pnpm
+· Lyzr Cognis (Docker on AWS) · Vercel AI SDK · Sandpack · Octokit · Vercel · pnpm

@@ -142,7 +142,7 @@ It also adds:
 3. Environment variables (Production + Preview). See [`.env.example`](.env.example):
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY`
-   - `DATABASE_URL`: the **Session pooler** string (IPv4, port 5432). It powers Memori.
+   - `MEMORY_SERVICE_URL`, `MEMORY_SERVICE_TOKEN`: printed by `memory-service/setup.sh` on the AWS server (see docs/SETUP.md §8).
    - At least one LLM key (`GROQ_API_KEY` is the cheapest and fastest for the demo; add
      `ANTHROPIC_API_KEY` etc. as available).
    - `GITHUB_TOKEN_KEY`: 32 random bytes, base64 (`openssl rand -base64 32`).

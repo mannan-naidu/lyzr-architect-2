@@ -10,8 +10,6 @@ Session title bar → cloud environment menu → **Edit** → **Network access**
 
 - [ ] `ui.shadcn.com` — shadcn/ui component registry (blocks `shadcn init/add`)
 - [ ] `*.supabase.co` and `api.supabase.com` — your project + `supabase db push`
-- [ ] `api.memorilabs.ai`, `collector.memorilabs.ai` — Memori augmentation / Memori Cloud
-- [ ] `huggingface.co`, `cdn-lfs.huggingface.co` (and `*.hf.co`) — Memori BYODB downloads its embedding model
 - [ ] `api.openai.com`, `generativelanguage.googleapis.com`, `openrouter.ai` — LLM providers you use
       (`api.anthropic.com` is already allowed)
 
@@ -90,8 +88,6 @@ Or paste `supabase/migrations/*.sql` into **SQL Editor → New query → Run**.
 - [ ] OpenAI: https://platform.openai.com/api-keys → `OPENAI_API_KEY`
 - [ ] Google: https://aistudio.google.com/apikey → `GOOGLE_GENERATIVE_AI_API_KEY`
 - [ ] OpenRouter: https://openrouter.ai/settings/keys → `OPENROUTER_API_KEY`
-- [ ] (Optional) Memori: https://app.memorilabs.ai → API key → `MEMORI_API_KEY` (raises
-      augmentation rate limits; required for Memori Cloud mode)
 
 ## 4b. GitHub push key
 
@@ -112,11 +108,33 @@ stored tokens, and users have to reconnect GitHub.
 ## 6. Claude Code cloud environment variables
 
 - [ ] Environment menu → **Edit** → **Environment variables**: add the same keys so Claude can run
-      migrations, the Memori spike and the app against your real project.
+      migrations and the app against your real project.
 
 ## 7. Smoke test
 
 - [ ] `pnpm dev` → http://localhost:3000/login → **Continue with GitHub** → lands on `/dashboard`.
 - [ ] Supabase → **Table Editor → profiles** shows your row.
 - [ ] Create a project in the dashboard → it appears in the list and in **Table Editor → projects**.
-- [ ] `pnpm tsx scripts/memori-spike.ts` → recalls "prefers Tailwind" (see docs/memori-spike.md).
+
+## 8. Memory service on AWS (Lyzr Cognis in Docker)
+
+Builder memory runs as its own service (`memory-service/`, ADR-006), because it needs a disk and a
+warm process that Vercel functions don't have.
+
+1. **Keys:** a Gemini API key (aistudio.google.com, free tier; used for embeddings) and your Groq
+   key (used for fact extraction).
+2. **EC2:** region **ap-south-1 (Mumbai)**, next to Supabase.
+   - Launch **Ubuntu Server 24.04**, instance type **t3.small**, storage 20 GB gp3, no key pair.
+   - Allow **SSH, HTTP and HTTPS**.
+3. **Set up:** open Instance → **Connect → EC2 Instance Connect** and run:
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/mannan-naidu/lyzr-architect-2/claude/jolly-lamport-0pzmql/memory-service/setup.sh | sudo bash
+   ```
+   - The script installs Docker, fetches the code, and asks for the two keys (input hidden).
+   - It starts the service behind Caddy with HTTPS at `https://<ip-with-dashes>.sslip.io`, then
+     prints `MEMORY_SERVICE_URL` and `MEMORY_SERVICE_TOKEN`.
+4. **Vercel:** add those two variables under Settings → Environment Variables, then redeploy.
+5. **Check:** signed in, open `/api/health`. It should show `"memory": {"status": "ok", "backend": "cognis"}`.
+
+**Updating the service later:** re-run the same command. It pulls the latest code and keeps your
+`.env` and stored memories (Docker volume `cognis-data`).
