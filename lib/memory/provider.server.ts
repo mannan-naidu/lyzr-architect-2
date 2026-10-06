@@ -61,9 +61,20 @@ export const noopMemory: MemoryProvider = {
 let provider: Promise<MemoryProvider | null> | undefined;
 let lastInitError: string | null = null;
 
+/** An error's message plus its causes (native loaders attach the real load errors as `cause`). */
+function errorChain(err: unknown, depth = 0): string {
+  if (depth > 3 || err == null) return "";
+  if (Array.isArray(err)) return err.map((e) => errorChain(e, depth + 1)).filter(Boolean).join(" | ");
+  if (err instanceof Error) {
+    const cause = errorChain((err as Error & { cause?: unknown }).cause, depth + 1);
+    return cause ? `${err.message} <- ${cause}` : err.message;
+  }
+  return String(err);
+}
+
 /** Strip anything that looks like a connection string or credential from an error message. */
 function scrub(message: string): string {
-  return message.replace(/postgres(ql)?:\/\/[^\s"']+/gi, "postgres://***").slice(0, 300);
+  return message.replace(/postgres(ql)?:\/\/[^\s"']+/gi, "postgres://***").slice(0, 1200);
 }
 
 /** Why memory is or isn't available, for the Memory tab and /api/health. Never includes secrets. */
@@ -94,7 +105,7 @@ export function getMemoryProvider(): Promise<MemoryProvider | null> {
       lastInitError = null;
       return created;
     })().catch((err: unknown) => {
-      lastInitError = scrub(err instanceof Error ? err.message : String(err));
+      lastInitError = scrub(errorChain(err));
       console.error("[memory] provider init failed:", lastInitError);
       provider = undefined; // retry on the next request
       return null;
