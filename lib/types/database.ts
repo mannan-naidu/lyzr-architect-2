@@ -125,16 +125,6 @@ export type CmsEntry = {
   updated_at: string;
 };
 
-export type MemoryRow = {
-  id: string;
-  owner_id: string;
-  content: string;
-  project_ids: string[];
-  times_seen: number;
-  created_at: string;
-  last_seen_at: string;
-};
-
 export type Deployment = {
   id: string;
   project_id: string;
@@ -189,10 +179,6 @@ export type Database = {
         GithubConnection,
         Pick<GithubConnection, "token_ciphertext"> & Partial<Omit<GithubConnection, "token_ciphertext">>
       >;
-      memories: Table<
-        MemoryRow,
-        Pick<MemoryRow, "content"> & Partial<Omit<MemoryRow, "content">>
-      >;
       cms_entries: Table<
         CmsEntry,
         Pick<CmsEntry, "project_id" | "collection" | "slug" | "title"> &
@@ -202,11 +188,6 @@ export type Database = {
     Views: Record<never, never>;
     Functions: {
       owns_project: { Args: { p_project_id: string }; Returns: boolean };
-      memory_upsert: { Args: { p_owner: string; p_project: string; p_content: string }; Returns: string };
-      memory_search: {
-        Args: { p_owner: string; p_query: string; p_limit?: number };
-        Returns: { id: string; content: string; score: number; created_at: string }[];
-      };
     };
     Enums: {
       app_mode: AppMode;

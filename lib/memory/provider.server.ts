@@ -78,42 +78,22 @@ function scrub(message: string): string {
 }
 
 /** Why memory is or isn't available, for the Memory tab and /api/health. Never includes secrets. */
-/** Which backend to use: MEMORY_PROVIDER=postgres (default) | memori | none. */
-function backend(): "postgres" | "memori" | "none" {
-  const v = process.env.MEMORY_PROVIDER?.trim().toLowerCase();
-  return v === "memori" || v === "none" ? v : "postgres";
-}
-
-/** Why memory is or isn't available, for the Memory tab and /api/health. Never includes secrets. */
 export async function getMemoryStatus(): Promise<
   { status: "ok"; backend: string } | { status: "not_configured" } | { status: "error"; error: string }
 > {
-  const which = backend();
-  if (which === "none") return { status: "not_configured" };
-  if (which === "memori" && !process.env.DATABASE_URL) return { status: "not_configured" };
-  if (which === "postgres" && !process.env.SUPABASE_SERVICE_ROLE_KEY) return { status: "not_configured" };
+  if (!process.env.DATABASE_URL) return { status: "not_configured" };
   const p = await getMemoryProvider();
   if (p) return { status: "ok", backend: p.name };
   return { status: "error", error: lastInitError ?? "Memory failed to start." };
 }
 
 /**
- * The configured provider, or null if none is available. Created once per server process.
- * - postgres (default): facts in Supabase Postgres; works on serverless (ADR-006).
- * - memori: Memori BYODB; needs a host with glibc >= 2.38 for its native engine (ADR-003).
+ * The configured provider, or null if none is available (no DATABASE_URL). Created once per
+ * server process: Memori's native engine and embedding model are expensive to load.
  */
 export function getMemoryProvider(): Promise<MemoryProvider | null> {
   if (!provider) {
     provider = (async () => {
-      const which = backend();
-      if (which === "none") return null;
-      if (which === "postgres") {
-        if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return null;
-        const { createPostgresMemoryProvider } = await import("@/lib/memory/postgres.server");
-        const created = createPostgresMemoryProvider();
-        lastInitError = null;
-        return created;
-      }
       if (!process.env.DATABASE_URL) return null;
       // Memori's engine downloads its embedding model (~87 MB) to ./.fastembed_cache. Serverless
       // filesystems are read-only except /tmp, so point the cache there (kept while the instance is warm).

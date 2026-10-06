@@ -115,35 +115,3 @@ AI's own mistakes and doom loops; 11+ rival submissions already lead with "two m
 **Decision.** Lead with memory-powered features (fix memory and loop breaker, fair-billing ledger,
 builder memory and decision log, visible memory, agent memory toggle, SEO/GEO toggle). The Simple/Pro
 lenses and other shared features are presented last.
-
----
-
-## ADR-006: Postgres-native builder memory on Vercel; Memori where its engine can run
-
-- **Date:** 2026-10-06
-- **Status:** Accepted (refines ADR-003 and ADR-004)
-
-**Context.** On the live Vercel deployment, Memori's prebuilt native engine failed to load:
-`undefined symbol: __isoc23_strtoll`. The binary is linked against glibc 2.38+, while Vercel's
-function runtime (Amazon Linux 2023) ships glibc 2.34. The musl build needs a musl libc that
-isn't present either. No configuration fixes that on Vercel.
-
-**Decision.** Ship a second `MemoryProvider`, `postgres`, as the default:
-- **Extraction:** after each turn, a fast model (GPT-OSS 20B on Groq when available) extracts
-  0–5 durable facts as structured output.
-- **Storage:** `public.memories` (owner-only RLS); `memory_upsert` merges near-duplicates with
-  pg_trgm similarity and records the projects each fact was seen in.
-- **Recall:** `memory_search` ranks by full-text match plus fuzzy similarity, plus reinforcement
-  and recency, topped up with the user's strongest preferences.
-
-Memori stays available (`MEMORY_PROVIDER=memori`) for hosts with glibc ≥ 2.38, such as a
-container on Ubuntu 24.04. Lyzr Cognis remains the production provider inside Lyzr.
-
-**Consequences.**
-- ✅ Memory works on serverless with no native code, and it lives under RLS next to the rest of
-  the data. That's stronger isolation than Memori's out-of-RLS schema.
-- ✅ This is the pluggable interface from ADR-004 paying off: the harness, chat and Memory panel
-  didn't change.
-- ⚠️ Recall is lexical, not semantic, so "darker UI" doesn't match "dark interfaces" without
-  embeddings. The next step is pgvector with an embedding model (or Cognis), behind the same
-  interface.

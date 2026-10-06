@@ -50,7 +50,7 @@ standard build loop:
 - **Builder memory** and a **decision log** stop it re-asking what you already settled.
 - **Visible memory** shows, edits and deletes all of the above.
 
-You can switch memory on for the agents you build (Postgres-native memory in the prototype, Lyzr Cognis in
+You can switch memory on for the agents you build (Memori in the prototype, Lyzr Cognis in
 production). Everything else follows the familiar vibe-coding flow (prompt → plan → build →
 preview → deploy), so there's nothing new to learn.
 
@@ -175,7 +175,7 @@ flowchart LR
     SA["Server actions<br/>approve · memory · ship · cms"]
     HAR["Agent harness<br/>plan → build → verify → fix"]
     GW["Model gateway<br/>AI SDK registry · caps · ledger"]
-    MP["MemoryProvider<br/>Postgres ⇄ Memori ⇄ Cognis"]
+    MP["MemoryProvider<br/>Memori ⇄ Cognis"]
   end
 
   subgraph Data["Supabase"]
@@ -211,7 +211,7 @@ flowchart LR
 | Web app | Next.js 16 App Router on Vercel, server components by default | Same | Streaming RSC, edge network, preview deploys per branch |
 | Auth | Supabase Auth: GitHub, Google, anonymous demo | + email and SSO for orgs | Postgres-native RLS uses the same JWT |
 | Database | Supabase Postgres, owner-only RLS on every table | + read replicas, Supavisor pooling | RLS is the security boundary; no hand-rolled access checks to forget |
-| Memory | Postgres-native provider: LLM fact extraction → `public.memories` (RLS), full-text + trigram recall (ADR-006). Memori selectable where its engine runs | `MemoryProvider` → Lyzr Cognis (Lyzr ecosystem), Memori, or pgvector | One interface, swappable (ADR-004) |
+| Memory | Memori (BYODB) in a `memori` schema on the same Postgres | `MemoryProvider` → Lyzr Cognis (Lyzr ecosystem) or Memori | One interface, swappable (ADR-004) |
 | Harness | In the route handler (one request per run, streamed) | Queue + workers (long-running, resumable) | Serverless time limits; fairness |
 | Sandbox | Sandpack (browser bundler) | E2B Firecracker microVM per project | Real Node/Python, agents can execute, network egress control |
 | Models | Vercel AI SDK with 5 providers, structured output | + capability routing, fallbacks, BYOK, cache | Model-agnostic by construction |
@@ -240,7 +240,7 @@ There are **four kinds of memory**, each stored where it fits best:
 
 | Memory | What it holds | Store | Scope | Read by |
 | --- | --- | --- | --- | --- |
-| **Builder memory** | Durable facts about how this user builds ("deploys on Vercel", "hates modals") | `public.memories` (Postgres provider) or Memori `memori_entity_fact` | User, across projects | Plan, build, fix, chat (recall) |
+| **Builder memory** | Durable facts about how this user builds ("deploys on Vercel", "hates modals") | Memori `memori_entity_fact` (+ embeddings) | User, across projects | Plan, build, fix, chat (semantic recall) |
 | **Decision log** | Settled project decisions ("Auth: none for v1") | `public.decisions` | Project | Every turn, always injected (not just recalled) |
 | **Fix memory** | error signature → attempted fix → outcome | `public.fix_attempts` | User, across projects | `/fix`, by exact signature |
 | **Agent memory** | What each built agent remembers about *its* end users | Memori / Cognis, keyed by the app's end user | Per app end user | The deployed agents (toggle per agent) |
@@ -251,19 +251,6 @@ lookup:
 - `errorSignature()` normalizes the error: it strips line numbers, paths, hashes and quoted values,
   then takes a sha256 prefix.
 - The same bug in a different project, or a week later, hits the same row.
-
-**Which backend (ADR-006).** The default `postgres` provider runs on Vercel with no native code:
-- **Extract:** after each turn, a fast model extracts 0–5 durable facts as structured output.
-- **Store:** `memory_upsert` merges near-duplicates (pg_trgm similarity) into `public.memories`
-  (owner-only RLS) and records the projects each fact was seen in. That's how the Memory tab
-  knows "learned in this project" and how *Forget this project* deletes only facts seen nowhere
-  else.
-- **Recall:** `memory_search` ranks by full-text match + fuzzy similarity + reinforcement and
-  recency, topped up with the user's strongest preferences.
-
-Memori (BYODB, the original choice) stays selectable with `MEMORY_PROVIDER=memori`. Its prebuilt
-engine needs glibc ≥ 2.38, while Vercel's runtime has 2.34, so it runs only on hosts like an
-Ubuntu 24.04 container. Lyzr Cognis is the production provider inside Lyzr.
 
 **Attribution in Memori:** entity = the user's id, session = the project id. A fact's *mentions*
 link it to the sessions it was seen in, which is how the Memory tab knows "learned in this project"
@@ -674,7 +661,7 @@ Memori.
 | Plan → approve → build, typed and streamed | Lyzr / LangGraph / CrewAI runtimes (code is generated for real) |
 | Live preview (Sandpack) with error capture | GitHub App + webhooks (OAuth token used instead) |
 | Fix memory, loop breaker, rollback, fair-billing ledger | |
-| Builder memory (Postgres provider): extract, recall, list/edit/delete/forget | |
+| Memori builder memory: recall, capture, list/edit/delete/forget | |
 | Decision log, trace and logs, diffs, edit by hand | |
 | Framework code generation (5 targets), agent memory toggle | |
 | GitHub push (Octokit, one commit), repo listing | |

@@ -146,7 +146,7 @@ function MemoryList() {
   if (state.backend === "none") {
     return (
       <EmptyNote>
-        Memory is switched off on this deployment (<code>MEMORY_PROVIDER=none</code>, or the Supabase service-role key is missing).
+        No memory backend is configured on this deployment (set <code>DATABASE_URL</code> to enable Memori).
       </EmptyNote>
     );
   }

@@ -38,7 +38,7 @@ it. It's built for Lyzr's TPM assignment and extends architect.new.
 | Plan → build | ✅ Real | Typed plan (structured output), approve, streamed file generation |
 | Live preview | ✅ Real | Sandpack (in-browser bundler) with error capture |
 | Fix memory + loop breaker | ✅ Real | Error signatures across projects, 3-try limit, rollback, self-fixes billed to the agent |
-| Builder memory | ✅ Real | Postgres-native provider (LLM fact extraction, RLS table, full-text + fuzzy recall); Memori selectable where its engine runs (ADR-006) |
+| Builder memory | ✅ Real | Memori in the `memori` schema; Memory tab lists, edits, deletes and forgets |
 | Decision log, ledger, trace, diffs | ✅ Real | `decisions`, `messages`, `run_events`, `project_files.previous_content` |
 | Agents | ✅ Real (code) / 🟡 Simulated (runs) | Code generated for Lyzr, LangGraph, CrewAI, OpenAI Agents SDK, TS; preview runs via `/agents.ts` simulator |
 | GitHub push | ✅ Real | Octokit, one commit per push; token AES-256-GCM encrypted |
