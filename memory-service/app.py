@@ -16,6 +16,7 @@ import logging
 import os
 import queue
 import re
+import sqlite3
 import threading
 import time
 from typing import Any, Optional
@@ -39,16 +40,76 @@ config = CognisConfig.from_env(
     # The stable Gemini embedding model (Cognis 1.0.0's config default is a preview model that
     # not every key can use). 768 dims, truncated to 256 for the fast search tier.
     embedding_model=os.environ.get("COGNIS_EMBEDDING_MODEL", "gemini/gemini-embedding-001"),
+    # Architect recalls extracted facts, not raw chat lines: skip embedding every message (saves
+    # two embedding calls per turn and shortens the time a capture holds the lock).
+    enable_immediate_recall=False,
 )
+DATA_DIR = os.environ.get("COGNIS_DATA_DIR", "/data")
 memory = Cognis(
-    data_dir=os.environ.get("COGNIS_DATA_DIR", "/data"),
+    data_dir=DATA_DIR,
     owner_id="bootstrap",
     agent_id=AGENT_ID,
     config=config,
 )
 
 # Cognis's local Qdrant and SQLite handles are single-process; serialise access across threads.
+# A capture (LLM + embedding calls) can hold this for many seconds, so reads avoid it: listing
+# uses its own read-only SQLite connection (WAL mode allows it), and recall falls back to the
+# keyword index when the lock is busy.
 lock = threading.Lock()
+RECALL_LOCK_WAIT_S = 2.5
+
+
+def read_db() -> sqlite3.Connection:
+    conn = sqlite3.connect(f"file:{os.path.join(os.path.expanduser(DATA_DIR), 'cognis.db')}?mode=ro", uri=True, timeout=5)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+ROW_COLUMNS = "m.memory_id, m.content, m.category, m.version, m.created_at, m.updated_at, m.session_id"
+
+
+def row_item(r: sqlite3.Row, project_id: Optional[str], score: Optional[float] = None) -> dict[str, Any]:
+    item = {
+        "id": r["memory_id"],
+        "content": r["content"],
+        "category": r["category"],
+        "version": r["version"] or 1,
+        "created_at": r["created_at"],
+        "updated_at": r["updated_at"],
+        "in_project": project_id is not None and r["session_id"] == project_id,
+    }
+    if score is not None:
+        item["score"] = score
+    return item
+
+
+STOP_WORDS = set(
+    "the and for are but not you your yours with this that these those from have has had was were will would "
+    "can could should what when where which who whom why how all any each few more most other some such "
+    "into onto over under than then there their them they its our ours out off own same just also very "
+    "about again only once here both being been does did doing done make made want like need get got use "
+    "user users app apps please let lets i'm".split()
+)
+
+
+def keyword_recall(user_id: str, project_id: str, query: str, limit: int) -> list[dict[str, Any]]:
+    """BM25 over Cognis's own FTS5 index (the keyword half of its hybrid search), lock-free."""
+    words = [w for w in re.findall(r"[A-Za-z0-9]+", query.lower()) if len(w) > 2 and w not in STOP_WORDS][:24]
+    if not words:
+        return []
+    fts = " OR ".join(f'"{w}"' for w in words)
+    with read_db() as conn:
+        rows = conn.execute(
+            f"""SELECT {ROW_COLUMNS}, bm25(memories_fts) AS rank
+                  FROM memories_fts f JOIN memories m ON f.rowid = m.rowid
+                 WHERE memories_fts MATCH ? AND f.owner_id = ? AND f.agent_id = ?
+                   AND f.is_current = 1 AND m.status != 'deleted'
+                 ORDER BY rank LIMIT ?""",
+            (fts, user_id, AGENT_ID, limit),
+        ).fetchall()
+    # bm25() is negative (lower = better); map to a modest 0.15–0.45 so it reads as "keyword match".
+    return [row_item(r, project_id, round(min(0.45, 0.15 + abs(r["rank"]) / 20), 3)) for r in rows]
 
 app = FastAPI(title="Architect memory service", version="1.0.0", docs_url=None, redoc_url=None)
 
@@ -169,7 +230,10 @@ def selftest() -> dict[str, Any]:
 
 @app.post("/v1/recall", dependencies=[Depends(require_token)])
 def recall(body: RecallIn) -> dict[str, Any]:
-    with lock:
+    if not lock.acquire(timeout=RECALL_LOCK_WAIT_S):
+        # A capture is running: answer from the keyword index instead of waiting.
+        return {"memories": keyword_recall(body.user_id, body.project_id, body.query, body.limit), "mode": "keyword"}
+    try:
         res = memory.search(
             query=body.query,
             limit=body.limit,
@@ -177,13 +241,15 @@ def recall(body: RecallIn) -> dict[str, Any]:
             agent_id=AGENT_ID,
             session_id=body.project_id,
         )
+    finally:
+        lock.release()
     out = []
     for r in res.get("results", []):
         # Search also returns raw recent messages from the session; keep extracted facts only.
         if r.get("source") == "message" or r.get("type") == "message":
             continue
         out.append({**to_item(r, body.project_id), "score": float(r.get("score") or 0)})
-    return {"memories": out}
+    return {"memories": out, "mode": "hybrid"}
 
 
 @app.post("/v1/capture", status_code=202, dependencies=[Depends(require_token)])
@@ -200,9 +266,15 @@ def list_memories(
     user_id: str = Query(min_length=1, max_length=64),
     project_id: Optional[str] = Query(default=None, max_length=64),
 ) -> dict[str, Any]:
-    with lock:
-        res = memory.get_all(limit=300, owner_id=user_id, agent_id=AGENT_ID)
-    return {"memories": [to_item(m, project_id) for m in res.get("memories", [])]}
+    # Lock-free: never waits behind a running capture.
+    with read_db() as conn:
+        rows = conn.execute(
+            f"""SELECT {ROW_COLUMNS} FROM memories m
+                 WHERE m.owner_id = ? AND m.agent_id = ? AND m.is_current = 1 AND m.status = 'current'
+                 ORDER BY m.updated_at DESC LIMIT 300""",
+            (user_id, AGENT_ID),
+        ).fetchall()
+    return {"memories": [row_item(r, project_id) for r in rows]}
 
 
 @app.patch("/v1/memories/{memory_id}", dependencies=[Depends(require_token)])
