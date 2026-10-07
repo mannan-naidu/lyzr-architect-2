@@ -132,6 +132,21 @@ export function createCognisProvider(baseUrl: string, token: string): MemoryProv
   };
 }
 
+/** Runs the service's self-test (one real embedding + one real extraction), for /api/health. */
+export async function selftestCognis(baseUrl: string, token: string): Promise<unknown> {
+  try {
+    const res = await fetch(`${baseUrl.replace(/\/+$/, "")}/v1/selftest`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${token}` },
+      signal: AbortSignal.timeout(20000),
+      cache: "no-store",
+    });
+    return res.ok ? await res.json() : { error: `selftest ${res.status}` };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "selftest failed" };
+  }
+}
+
 /** Liveness of the memory service, for /api/health. */
 export async function pingCognis(baseUrl: string): Promise<boolean> {
   try {

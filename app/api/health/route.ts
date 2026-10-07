@@ -20,6 +20,13 @@ export async function GET() {
     },
     providers: availableProviders(),
     memory: await getMemoryStatus(),
+    memorySelftest:
+      process.env.MEMORY_SERVICE_URL && process.env.MEMORY_SERVICE_TOKEN
+        ? await (await import("@/lib/memory/cognis.server")).selftestCognis(
+            process.env.MEMORY_SERVICE_URL,
+            process.env.MEMORY_SERVICE_TOKEN,
+          )
+        : null,
     githubTokenKey: Boolean(process.env.GITHUB_TOKEN_KEY),
   });
 }

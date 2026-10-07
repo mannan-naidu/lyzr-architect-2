@@ -15,7 +15,9 @@ import hmac
 import logging
 import os
 import queue
+import re
 import threading
+import time
 from typing import Any, Optional
 
 from cognis import Cognis
@@ -34,6 +36,9 @@ if len(TOKEN) < 32:
 config = CognisConfig.from_env(
     # Fact extraction through LiteLLM; Groq by default (reads GROQ_API_KEY).
     llm_model=os.environ.get("COGNIS_LLM_MODEL", "groq/openai/gpt-oss-20b"),
+    # The stable Gemini embedding model (Cognis 1.0.0's config default is a preview model that
+    # not every key can use). 768 dims, truncated to 256 for the fast search tier.
+    embedding_model=os.environ.get("COGNIS_EMBEDDING_MODEL", "gemini/gemini-embedding-001"),
 )
 memory = Cognis(
     data_dir=os.environ.get("COGNIS_DATA_DIR", "/data"),
@@ -54,6 +59,15 @@ def require_token(authorization: str = Header(default="")) -> None:
         raise HTTPException(status_code=401, detail="unauthorized")
 
 
+def scrub(message: str) -> str:
+    """Error text safe to return: no API keys (Gemini puts ?key= in URLs) or bearer tokens."""
+    message = re.sub(r"(key=)[^&\s\"']+", r"\1***", message)
+    message = re.sub(r"(AIza|gsk_|sk-)[A-Za-z0-9_\-]{8,}", r"\1***", message)
+    return message.replace(TOKEN, "***")[:500]
+
+
+stats: dict[str, Any] = {"captures_ok": 0, "captures_empty": 0, "captures_failed": 0, "last_error": None}
+
 # ── Capture runs in the background so the chat never waits on fact extraction ──────────────────
 captures: "queue.Queue[dict[str, Any]]" = queue.Queue(maxsize=500)
 
@@ -73,8 +87,11 @@ def capture_worker() -> None:
                     session_id=job["project_id"],
                 )
             log.info("capture user=%s… %s", job["user_id"][:8], result.get("message"))
-        except Exception:  # never let one bad turn kill the worker
+            stats["captures_ok" if result.get("memories") else "captures_empty"] += 1
+        except Exception as err:  # never let one bad turn kill the worker
             log.exception("capture failed")
+            stats["captures_failed"] += 1
+            stats["last_error"] = scrub(f"{type(err).__name__}: {err}")
         finally:
             captures.task_done()
 
@@ -123,6 +140,30 @@ class ForgetIn(BaseModel):
 @app.get("/health")
 def health() -> dict[str, Any]:
     return {"ok": True, "engine": "lyzr-cognis", "queued_captures": captures.qsize()}
+
+
+@app.post("/v1/selftest", dependencies=[Depends(require_token)])
+def selftest() -> dict[str, Any]:
+    """One real embedding and one real extraction call, with timings and scrubbed errors."""
+    out: dict[str, Any] = {
+        "embedding_model": config.embedding_model,
+        "llm_model": config.llm_model,
+        **stats,
+    }
+    t = time.time()
+    try:
+        emb = memory._embedder.embed_query("The user deploys on Vercel.")  # noqa: SLF001
+        dims = sorted(emb.embeddings.keys())
+        out["embedding"] = {"ok": bool(emb.get(config.embedding_full_dim)), "dims": dims, "ms": int((time.time() - t) * 1000)}
+    except Exception as err:
+        out["embedding"] = {"ok": False, "error": scrub(f"{type(err).__name__}: {err}")}
+    t = time.time()
+    try:
+        facts = memory._extractor._extract_facts("[USER] I always deploy on Vercel.")  # noqa: SLF001
+        out["extraction"] = {"ok": bool(facts), "facts": facts[:3], "ms": int((time.time() - t) * 1000)}
+    except Exception as err:
+        out["extraction"] = {"ok": False, "error": scrub(f"{type(err).__name__}: {err}")}
+    return out
 
 
 @app.post("/v1/recall", dependencies=[Depends(require_token)])
