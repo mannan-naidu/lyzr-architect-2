@@ -159,8 +159,9 @@ def selftest() -> dict[str, Any]:
         out["embedding"] = {"ok": False, "error": scrub(f"{type(err).__name__}: {err}")}
     t = time.time()
     try:
-        facts = memory._extractor._extract_facts("[USER] I always deploy on Vercel.")  # noqa: SLF001
-        out["extraction"] = {"ok": bool(facts), "facts": facts[:3], "ms": int((time.time() - t) * 1000)}
+        # Call the model directly (Cognis's _extract_facts swallows errors) so failures are visible.
+        reply = memory._extractor._llm_call('Reply with exactly: {"facts": ["The user deploys on Vercel."]}')  # noqa: SLF001
+        out["extraction"] = {"ok": "facts" in reply, "reply": reply[:120], "ms": int((time.time() - t) * 1000)}
     except Exception as err:
         out["extraction"] = {"ok": False, "error": scrub(f"{type(err).__name__}: {err}")}
     return out

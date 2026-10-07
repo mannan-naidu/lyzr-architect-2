@@ -2,6 +2,7 @@
 # One-command setup for the Architect memory service on a fresh Ubuntu 24.04 EC2 instance.
 #   curl -fsSL https://raw.githubusercontent.com/mannan-naidu/lyzr-architect-2/claude/jolly-lamport-0pzmql/memory-service/setup.sh | sudo bash
 # Asks for your Gemini and Groq keys (input hidden), then prints the URL and token for Vercel.
+# Re-run any time to update the code; add RESET_KEYS=1 (… | sudo RESET_KEYS=1 bash) to re-enter the keys.
 set -euo pipefail
 
 REPO="https://github.com/mannan-naidu/lyzr-architect-2.git"
@@ -26,10 +27,26 @@ TOKEN_IMDS=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H "X-aws-
 IP=$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN_IMDS" http://169.254.169.254/latest/meta-data/public-ipv4)
 DOMAIN="${IP//./-}.sslip.io"
 
-if [ ! -f .env ]; then
-  # Read from the terminal even when this script is piped from curl.
+ask_keys() {
+  # Read from the terminal even when this script is piped from curl. Input is hidden.
   read -rsp "Paste your GEMINI_API_KEY (input hidden), then Enter: " GEMINI < /dev/tty; echo
   read -rsp "Paste your GROQ_API_KEY (input hidden), then Enter: " GROQ < /dev/tty; echo
+  GEMINI="$(printf '%s' "$GEMINI" | tr -d '[:space:]')"
+  GROQ="$(printf '%s' "$GROQ" | tr -d '[:space:]')"
+  case "$GEMINI" in AIza*) echo "    Gemini key looks right (AIza…, ${#GEMINI} chars)";; *) echo "    WARNING: a Gemini API key normally starts with AIza (this one starts with ${GEMINI:0:4}…)";; esac
+  case "$GROQ" in gsk_*) echo "    Groq key looks right (gsk_…, ${#GROQ} chars)";; *) echo "    WARNING: a Groq API key normally starts with gsk_ (this one starts with ${GROQ:0:4}…)";; esac
+}
+
+check_keys() {
+  local g q
+  g=$(curl -s -o /dev/null -w "%{http_code}" -H "x-goog-api-key: $1" "https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001")
+  q=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $2" "https://api.groq.com/openai/v1/models")
+  [ "$g" = "200" ] && echo "    Gemini key: accepted by Google" || echo "    Gemini key: REJECTED by Google (HTTP $g). Create a new key at aistudio.google.com and re-run with RESET_KEYS=1."
+  [ "$q" = "200" ] && echo "    Groq key: accepted by Groq" || echo "    Groq key: REJECTED by Groq (HTTP $q). Check it at console.groq.com and re-run with RESET_KEYS=1."
+}
+
+if [ ! -f .env ]; then
+  ask_keys
   SERVICE_TOKEN=$(openssl rand -hex 32)
   umask 077
   cat > .env <<ENV
@@ -39,12 +56,18 @@ GEMINI_API_KEY=$GEMINI
 GROQ_API_KEY=$GROQ
 COGNIS_LLM_MODEL=groq/openai/gpt-oss-20b
 ENV
-else
-  sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" .env
+  check_keys "$GEMINI" "$GROQ"
+elif [ "${RESET_KEYS:-0}" = "1" ]; then
+  echo "==> Replacing the Gemini and Groq keys (the service token and URL stay the same)"
+  ask_keys
+  sed -i '/^GEMINI_API_KEY=/d;/^GROQ_API_KEY=/d' .env
+  printf 'GEMINI_API_KEY=%s\nGROQ_API_KEY=%s\n' "$GEMINI" "$GROQ" >> .env
+  check_keys "$GEMINI" "$GROQ"
 fi
+sed -i "s/^DOMAIN=.*/DOMAIN=$DOMAIN/" .env
 
 echo "==> Building and starting (first run takes a few minutes)"
-docker compose --env-file .env up -d --build
+docker compose --env-file .env up -d --build --force-recreate
 
 echo "==> Waiting for HTTPS"
 for _ in $(seq 1 40); do
