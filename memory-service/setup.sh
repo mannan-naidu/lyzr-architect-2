@@ -27,13 +27,23 @@ TOKEN_IMDS=$(curl -fsS -X PUT http://169.254.169.254/latest/api/token -H "X-aws-
 IP=$(curl -fsS -H "X-aws-ec2-metadata-token: $TOKEN_IMDS" http://169.254.169.254/latest/meta-data/public-ipv4)
 DOMAIN="${IP//./-}.sslip.io"
 
+undouble() {
+  # The EC2 browser terminal sometimes pastes twice; if the value is two identical halves, keep one.
+  local v="$1" n=${#1}
+  if [ "$n" -gt 0 ] && [ $((n % 2)) -eq 0 ] && [ "${v:0:n/2}" = "${v:n/2}" ]; then
+    echo "    (that key was pasted twice; using one copy)" >&2
+    v="${v:0:n/2}"
+  fi
+  printf '%s' "$v"
+}
+
 ask_keys() {
   # Read from the terminal even when this script is piped from curl. Input is hidden.
   read -rsp "Paste your GEMINI_API_KEY (input hidden), then Enter: " GEMINI < /dev/tty; echo
   read -rsp "Paste your GROQ_API_KEY (input hidden), then Enter: " GROQ < /dev/tty; echo
-  GEMINI="$(printf '%s' "$GEMINI" | tr -d '[:space:]')"
-  GROQ="$(printf '%s' "$GROQ" | tr -d '[:space:]')"
-  case "$GEMINI" in AIza*) echo "    Gemini key looks right (AIza…, ${#GEMINI} chars)";; *) echo "    WARNING: a Gemini API key normally starts with AIza (this one starts with ${GEMINI:0:4}…)";; esac
+  GEMINI="$(undouble "$(printf '%s' "$GEMINI" | tr -d '[:space:]')")"
+  GROQ="$(undouble "$(printf '%s' "$GROQ" | tr -d '[:space:]')")"
+  case "$GEMINI" in AIza*) echo "    Gemini key looks right (AIza…, ${#GEMINI} chars)";; *) echo "    WARNING: a Gemini API key starts with AIza and is 39 characters (this one starts with ${GEMINI:0:4}… and is ${#GEMINI}). Get one at aistudio.google.com > Get API key.";; esac
   case "$GROQ" in gsk_*) echo "    Groq key looks right (gsk_…, ${#GROQ} chars)";; *) echo "    WARNING: a Groq API key normally starts with gsk_ (this one starts with ${GROQ:0:4}…)";; esac
 }
 
