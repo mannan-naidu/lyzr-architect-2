@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 
 import type { Plan } from "@/lib/build/schemas";
 import type { WorkspaceFile } from "@/lib/build/types";
+import type { MemoryView } from "@/lib/features";
 import type { AppMode, Decision, FixAttempt, PlanStatus, RunEvent } from "@/lib/types/database";
 
 export type WorkspaceData = {
@@ -57,6 +58,9 @@ type Ctx = WorkspaceData & {
   /** Rendered body HTML captured from the preview (the pre-render snapshot used for SEO). */
   snapshot: string | null;
   setSnapshot: (html: string | null) => void;
+  /** Memory sub-view requested by feature search (or ?view=). */
+  memoryView: MemoryView;
+  setMemoryView: (v: MemoryView) => void;
 };
 
 const WorkspaceContext = createContext<Ctx | null>(null);
@@ -64,10 +68,14 @@ const WorkspaceContext = createContext<Ctx | null>(null);
 export function WorkspaceProvider({
   data,
   modelId,
+  initialTab,
+  initialView,
   children,
 }: {
   data: WorkspaceData;
   modelId: string;
+  initialTab?: string;
+  initialView?: MemoryView;
   children: ReactNode;
 }) {
   const [plan, setPlanState] = useState(data.plan);
@@ -76,7 +84,8 @@ export function WorkspaceProvider({
   const [filesVersion, setFilesVersion] = useState(0);
   const [build, setBuild] = useState<BuildState>({ phase: "idle" });
   const [snapshot, setSnapshot] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState(data.files.length ? "preview" : "plan");
+  const [activeTab, setActiveTab] = useState(initialTab ?? (data.files.length ? "preview" : "plan"));
+  const [memoryView, setMemoryView] = useState<MemoryView>(initialView ?? "memories");
 
   const setPlan = useCallback((p: Plan | null, s: PlanStatus) => {
     setPlanState(p);
@@ -112,8 +121,10 @@ export function WorkspaceProvider({
       filesVersion,
       snapshot,
       setSnapshot,
+      memoryView,
+      setMemoryView,
     }),
-    [data, plan, planStatus, files, modelId, activeTab, setPlan, setFiles, build, filesVersion, snapshot],
+    [data, plan, planStatus, files, modelId, activeTab, setPlan, setFiles, build, filesVersion, snapshot, memoryView],
   );
 
   return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;

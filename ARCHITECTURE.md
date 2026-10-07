@@ -460,6 +460,23 @@ the spec where possible and flags drift where not.
 
 ---
 
+### 9.1 Feature search (⌘K)
+
+architect.new has no search. Architect 2.0's header has a **feature search**: type "cost",
+"undo", "wordpress" or "how much am I paying" and jump straight to the place in the product that
+does it. It opens the right tab and sub-view, and switches to Pro mode if the feature needs it.
+- **Index:** `lib/features.ts` holds ~25 features. Each has a title, a summary, the synonyms
+  people actually type, and a target (tab and view, page, UI element or action).
+- **Prototype ranking: weighted text match.** Title beats synonym beats summary. It handles
+  prefixes ("depl" → Deploy), light stemming ("paying" → pay), filler-word removal and a
+  phrase bonus. Results show *where* the feature lives. With no match, it offers to ask the
+  chat instead.
+- **Production: semantic search.** Embed the feature index, the help docs and changelog entries.
+  Query them with the same hybrid **vector + BM25** pipeline (Reciprocal Rank Fusion) the memory
+  service already runs, so "put it on the internet" finds Deploy with no shared words.
+  - Searches that open no result are logged; they show missing features and missing synonyms.
+  - Results can be personalised with builder memory: a user who deploys often sees Deploy first.
+
 ## 10. The proxies
 
 There are three different proxies. Each has one job.

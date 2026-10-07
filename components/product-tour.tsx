@@ -192,8 +192,8 @@ export const WORKSPACE_TOUR: TourStep[] = [
   },
   {
     target: "command-palette",
-    title: "Jump anywhere with ⌘K",
-    body: "New project, switch projects, theme, or replay this tour.",
+    title: "Search any feature with ⌘K",
+    body: "Type what you want, like “cost”, “undo” or “deploy”, and Architect takes you straight there. Projects and commands too.",
   },
   {
     target: "ship",

@@ -44,6 +44,11 @@
 ship), so there's no learning curve. A **quick first-run tour** points out the five places that
 matter. The new ideas live *inside* that flow, not in a new one.
 
+8. **Feature search (⌘K).** architect.new has no search. Ours points you straight to the feature:
+   "how much am I paying" opens the billing ledger, "undo" opens fix history, "what changed"
+   switches to Pro and opens the diffs. It's text matching today, with semantic search
+   (vector + BM25, the same engine as memory) designed for production.
+
 ## What's also there (shared baseline, presented last)
 
 - **Simple / Pro lenses on one project.** Pro adds diffs, edit-by-hand, logs and an agent trace.

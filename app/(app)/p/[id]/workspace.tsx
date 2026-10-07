@@ -14,7 +14,7 @@ import {
   SearchIcon,
   SparklesIcon,
 } from "lucide-react";
-import { useOptimistic, useState, useTransition, type ComponentType } from "react";
+import { useCallback, useEffect, useOptimistic, useRef, useState, useTransition, type ComponentType } from "react";
 import { toast } from "sonner";
 
 import { ChatPanel } from "@/components/chat/chat-panel";
@@ -34,6 +34,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { ArchitectUIMessage } from "@/lib/chat/types";
+import { OPEN_FEATURE_EVENT, type MemoryView, type OpenFeatureDetail, type WorkspaceTab } from "@/lib/features";
 import { defaultModelFor, MODELS, PROVIDER_LABELS, type ProviderId } from "@/lib/models";
 import { FRAMEWORK_LABELS, type AgentFramework, type AppMode } from "@/lib/types/database";
 
@@ -73,21 +74,25 @@ export function Workspace({
   data,
   initialMessages,
   availableProviders,
+  initialFeature,
 }: {
   data: WorkspaceData;
   initialMessages: ArchitectUIMessage[];
   /** Providers with an API key configured on the server; other models show as unavailable. */
   availableProviders: ProviderId[];
+  /** Where feature search asked to land (from ?tab=&view=&pro=1). */
+  initialFeature?: { tab?: WorkspaceTab; view?: MemoryView; pro?: boolean };
 }) {
   const [modelId, setModelId] = useState<string>(() => defaultModelFor(availableProviders).id);
 
   return (
-    <WorkspaceProvider data={data} modelId={modelId}>
+    <WorkspaceProvider data={data} modelId={modelId} initialTab={initialFeature?.tab} initialView={initialFeature?.view}>
       <WorkspaceShell
         initialMessages={initialMessages}
         availableProviders={availableProviders}
         modelId={modelId}
         setModelId={setModelId}
+        startInPro={Boolean(initialFeature?.pro)}
       />
     </WorkspaceProvider>
   );
@@ -98,32 +103,63 @@ function WorkspaceShell({
   availableProviders,
   modelId,
   setModelId,
+  startInPro,
 }: {
   initialMessages: ArchitectUIMessage[];
   availableProviders: ProviderId[];
   modelId: string;
   setModelId: (id: string) => void;
+  startInPro: boolean;
 }) {
-  const { project, activeTab, setActiveTab } = useWorkspace();
+  const { project, activeTab, setActiveTab, setMemoryView } = useWorkspace();
   const [mode, setOptimisticMode] = useOptimistic<AppMode>(project.mode);
   const [, startTransition] = useTransition();
   const model = MODELS.find((m) => m.id === modelId) ?? MODELS[0];
 
-  const changeMode = (next: string) => {
-    if (next !== "simple" && next !== "pro") return;
-    startTransition(async () => {
-      setOptimisticMode(next);
-      const result = await setProjectMode({ projectId: project.id, mode: next });
-      if ("error" in result) toast.error(`Couldn't switch mode: ${result.error}`);
-    });
-  };
+  const changeMode = useCallback(
+    (next: string) => {
+      if (next !== "simple" && next !== "pro") return;
+      startTransition(async () => {
+        setOptimisticMode(next);
+        const result = await setProjectMode({ projectId: project.id, mode: next });
+        if ("error" in result) toast.error(`Couldn't switch mode: ${result.error}`);
+      });
+    },
+    [project.id, setOptimisticMode],
+  );
+
+  // Feature search (⌘K): jump to a tab / Memory sub-view, switching to Pro when the feature needs it.
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const { tab, view, pro } = (e as CustomEvent<OpenFeatureDetail>).detail ?? {};
+      if (pro && modeRef.current !== "pro") {
+        changeMode("pro");
+        toast.info("Switched to Pro mode", { description: "Diffs, edit by hand, logs and trace live here." });
+      }
+      if (view) setMemoryView(view);
+      if (tab) setActiveTab(tab);
+    };
+    window.addEventListener(OPEN_FEATURE_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_FEATURE_EVENT, onOpen);
+  }, [changeMode, setActiveTab, setMemoryView]);
+  const startedInPro = useRef(false);
+  useEffect(() => {
+    if (startInPro && !startedInPro.current && modeRef.current !== "pro") {
+      startedInPro.current = true;
+      changeMode("pro");
+    }
+  }, [startInPro, changeMode]);
 
   const pro = mode === "pro";
   const tabs = PANEL_TABS.filter((t) => (pro || !t.proOnly) && (project.cms_enabled || !t.cmsOnly));
   const current = tabs.some((t) => t.value === activeTab) ? activeTab : "preview";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col" data-workspace-id={project.id}>
       {/* ── Top bar ─────────────────────────────────────────────────────────────── */}
       <div className="flex h-12 shrink-0 items-center gap-3 border-b px-4">
         <span className="size-1.5 shrink-0 rounded-full bg-[var(--green)]" aria-hidden />

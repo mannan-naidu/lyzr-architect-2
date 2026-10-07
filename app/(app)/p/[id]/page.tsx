@@ -9,8 +9,15 @@ import { createClient } from "@/lib/supabase/server";
 import { Workspace } from "./workspace";
 import type { WorkspaceData } from "./workspace-context";
 
-export default async function ProjectPage({ params }: PageProps<"/p/[id]">) {
+const featureParams = z.object({
+  tab: z.enum(["plan", "preview", "code", "memory", "agents", "content", "ship", "logs", "trace"]).optional().catch(undefined),
+  view: z.enum(["memories", "decisions", "fixes", "ledger"]).optional().catch(undefined),
+  pro: z.literal("1").optional().catch(undefined),
+});
+
+export default async function ProjectPage({ params, searchParams }: PageProps<"/p/[id]">) {
   const { id } = await params;
+  const feature = featureParams.parse(await searchParams);
   if (!z.uuid().safeParse(id).success) notFound();
 
   const supabase = await createClient();
@@ -81,5 +88,12 @@ export default async function ProjectPage({ params }: PageProps<"/p/[id]">) {
     ledger: ledger.data ?? [],
   };
 
-  return <Workspace data={data} initialMessages={initialMessages} availableProviders={availableProviders()} />;
+  return (
+    <Workspace
+      data={data}
+      initialMessages={initialMessages}
+      availableProviders={availableProviders()}
+      initialFeature={{ tab: feature.tab, view: feature.view, pro: feature.pro === "1" }}
+    />
+  );
 }

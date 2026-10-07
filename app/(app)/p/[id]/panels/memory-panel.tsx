@@ -35,8 +35,7 @@ type View = "memories" | "decisions" | "fixes" | "ledger";
  * the project's decision log and fix history. Nothing the agent "knows" is hidden from the user.
  */
 export function MemoryPanel() {
-  const { project, decisions, fixes, ledger } = useWorkspace();
-  const [view, setView] = useState<View>("memories");
+  const { project, decisions, fixes, ledger, memoryView: view, setMemoryView: setView } = useWorkspace();
   const [enabled, setEnabledOptimistic] = useOptimistic(project.memory_enabled);
   const [, startToggle] = useTransition();
 
