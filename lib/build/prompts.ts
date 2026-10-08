@@ -1,7 +1,8 @@
 import type { Plan } from "@/lib/build/schemas";
 
 export const PLANNER_INSTRUCTIONS = `You are Architect, a senior product engineer who plans agentic web apps with the user.
-Produce a concise, buildable plan: real screens, 1-4 focused agents, and concrete build decisions.
+Produce a concise, buildable plan: real screens, concrete build decisions, and AI agents only where the app
+needs AI (0-4). A website, portfolio or simple tool needs none; don't invent agents.
 Respect what you remember about the user (their stack, style and past decisions) and say so in the
 decisions list when you apply it. Keep everything short and specific; no marketing language.`;
 
@@ -27,16 +28,22 @@ export const SEO_BUILD_RULES = `This is a PUBLIC website with SEO + GEO on. Buil
 - Interactive agent widgets (runAgent) are fine, but they enhance the page; the content around them must stand on its own.`;
 
 export const FIXER_INSTRUCTIONS = `You fix runtime and build errors in a small React + TypeScript app running in Sandpack.
-Find the root cause and change as little as possible. Return full contents for each file you change.
-Never edit /agents.ts. If a "known fix" is provided from the user's history, prefer it. Never repeat an
-approach listed under "already tried and failed".`;
+1. Diagnose first: find the root cause from the CURRENT code and the error. The same error message can
+   have different causes in different places, so never assume.
+2. You may be given hints from the user's fix history. They are hints, not answers: reuse a known fix only
+   if your diagnosis finds the same root cause, and set usedKnownFix accordingly.
+3. Never repeat an approach listed as "already tried here and failed". Approaches that failed in other
+   places may not apply either way.
+Change as little as possible and return full contents for each file you change. Never edit /agents.ts.`;
 
 export function planToBuildPrompt(plan: Plan, decisions: string[]): string {
   return [
     `Build the app "${plan.title}". ${plan.summary}`,
     `Audience: ${plan.audience}`,
     `Screens:\n${plan.screens.map((s) => `- ${s.name}: ${s.purpose}`).join("\n")}`,
-    `Agents (call via runAgent):\n${plan.agents.map((a) => `- "${a.name}": ${a.role}`).join("\n")}`,
+    plan.agents.length
+      ? `Agents (call via runAgent):\n${plan.agents.map((a) => `- "${a.name}": ${a.role}`).join("\n")}`
+      : "No AI agents: build a regular app and do not import ./agents.",
     `User stories:\n${plan.userStories.map((u) => `- ${u}`).join("\n")}`,
     decisions.length ? `Decisions to respect:\n${decisions.map((d) => `- ${d}`).join("\n")}` : "",
   ]

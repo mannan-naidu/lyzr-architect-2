@@ -90,8 +90,9 @@ Sources: [SiliconANGLE launch article (Feb 2026)](https://siliconangle.com/2026/
 
 1. **Fix memory and a loop breaker.**
    - Every preview error is fingerprinted.
-   - "Fix it" reuses a fix that worked before (in *any* of your projects) and avoids fixes that
-     already failed.
+   - "Fix it" diagnoses the cause first, then uses your fix history as hints: a fix that worked for
+     the same error in the same place (in *any* of your projects) is reused only if the cause
+     matches, and fixes that already failed there are never repeated.
    - After 3 failed attempts it stops, rolls back to the last working version, and asks one
      question instead of burning more credits.
 2. **Fair-billing ledger.**
@@ -154,7 +155,8 @@ building for you every time.
 
 And when something breaks, you don't pay for the AI's mistakes. Architect remembers every fix it
 has tried for you:
-- When an error comes back, it reuses the fix that worked and skips the ones that didn't.
+- When an error comes back, it works out *why*, reuses a past fix only if the cause matches, and
+  skips the ones that already failed.
 - After three failed tries it stops, rolls back to your last working version, and asks you one
   plain question.
 - Those fixes are free: the billing ledger shows exactly what you paid for and what Architect
@@ -176,7 +178,9 @@ Memory and accountability that those tools leave to you:
   were recalled for each reply and plan.
 
 It also adds:
-- **Fix memory** keyed on normalized error signatures, which stops doom loops across sessions.
+- **Fix memory** that finds candidates by error signature *and* location, then makes the model
+  diagnose before reusing anything (one message can have different causes). It stops doom loops
+  across sessions.
 - **A per-step ledger and trace** (Pro mode: logs, per-run timeline, tokens, diffs against the
   previous version), so you can audit what the agent did and what it cost.
 - **Agents are first-class.** One spec compiles to Lyzr, LangGraph, CrewAI, OpenAI Agents SDK or

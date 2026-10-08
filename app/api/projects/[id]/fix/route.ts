@@ -6,7 +6,7 @@ import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.serv
 import { fixAgentImports } from "@/lib/build/agents-runtime";
 import { FIXER_INSTRUCTIONS, SEO_BUILD_RULES } from "@/lib/build/prompts";
 import { fixSchema } from "@/lib/build/schemas";
-import { errorSignature } from "@/lib/build/signature";
+import { errorLocation, errorSignature } from "@/lib/build/signature";
 import { logEvent, normalizePath, recordUsage, saveFiles } from "@/lib/build/store.server";
 import type { FixResponse, WorkspaceFile } from "@/lib/build/types";
 import { getMemoryProvider } from "@/lib/memory/provider.server";
@@ -26,9 +26,13 @@ const dateFmt = new Intl.DateTimeFormat("en", { day: "numeric", month: "short" }
 
 /**
  * Fix a preview error, using fix memory:
- *  1. fingerprint the error; look up every past attempt for it across the user's projects;
- *  2. if a fix worked before, reuse it; never repeat an approach that already failed;
- *  3. after MAX_ATTEMPTS failures in this project, roll back to the last good files and ask one question.
+ *  1. fingerprint the error (message signature + location) and look up past attempts with the same
+ *     message across the user's projects. These are candidates, not answers: one message can have
+ *     several root causes, so the model always diagnoses from the current code first.
+ *  2. same message at the same place → strong hint; elsewhere → weak hint. The model reuses a known
+ *     fix only if its own diagnosis finds the same cause, and never repeats a fix that failed here.
+ *  3. after MAX_ATTEMPTS failures on the same error at the same place in this project, roll back to
+ *     the last good files and ask one question.
  * Self-fix tokens are recorded as billed to the agent, not the user (fair-billing ledger).
  */
 export async function POST(request: Request, ctx: RouteContext<"/api/projects/[id]/fix">) {
@@ -44,33 +48,43 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
 
   const { error: errorText } = parsed.data;
   const signature = errorSignature(errorText);
+  const location = errorLocation(errorText);
   const runId = crypto.randomUUID();
+  // Same place = same file and offending line (or both errors name no file).
+  const samePlace = (message: string) => errorLocation(message) === location;
 
-  // The error came back, so any fix still pending for it in this project didn't work.
-  await supabase
-    .from("fix_attempts")
-    .update({ outcome: "failed" })
-    .eq("project_id", id)
-    .eq("error_signature", signature)
-    .eq("outcome", "pending");
-
-  // Fix memory: all attempts for this error, across the user's projects (RLS: own rows only).
+  // Fix memory: every attempt with this message signature, across the user's projects (RLS: own rows).
   const { data: history } = await supabase
     .from("fix_attempts")
-    .select("id, project_id, attempt, fix_summary, outcome, created_at")
+    .select("id, project_id, attempt, fix_summary, outcome, created_at, error_message")
     .eq("error_signature", signature)
     .order("created_at", { ascending: false })
     .limit(30);
   const attempts = history ?? [];
-  const lastSuccessHere = attempts.find((a) => a.project_id === id && a.outcome === "succeeded");
-  const streak = attempts.filter(
-    (a) =>
-      a.project_id === id &&
-      a.outcome === "failed" &&
-      (!lastSuccessHere || a.created_at > lastSuccessHere.created_at),
+
+  // The same error came back at the same place, so a fix still pending there didn't work. (If it
+  // moved elsewhere, the earlier fix may well have worked and this is a different problem.)
+  const failedNow = attempts.filter((a) => a.project_id === id && a.outcome === "pending" && samePlace(a.error_message));
+  if (failedNow.length) {
+    await supabase.from("fix_attempts").update({ outcome: "failed" }).in("id", failedNow.map((a) => a.id));
+    for (const a of failedNow) a.outcome = "failed";
+  }
+
+  const here = attempts.filter((a) => a.project_id === id && samePlace(a.error_message));
+  const lastSuccessHere = here.find((a) => a.outcome === "succeeded");
+  const streak = here.filter(
+    (a) => a.outcome === "failed" && (!lastSuccessHere || a.created_at > lastSuccessHere.created_at),
   );
-  const knownFix = attempts.find((a) => a.outcome === "succeeded") ?? null;
-  const avoided = [...new Set(attempts.filter((a) => a.outcome === "failed").map((a) => a.fix_summary))].slice(0, 6);
+  // Hints, strongest first: a success at the same place, else a success with the same message elsewhere.
+  const succeeded = attempts.filter((a) => a.outcome === "succeeded");
+  const strongFix = succeeded.find((a) => samePlace(a.error_message)) ?? null;
+  const weakFixes = succeeded.filter((a) => a !== strongFix).slice(0, 3);
+  const knownFix = strongFix ?? weakFixes[0] ?? null;
+  const failedHere = [...new Set(here.filter((a) => a.outcome === "failed").map((a) => a.fix_summary))].slice(0, 6);
+  const failedElsewhere = [
+    ...new Set(attempts.filter((a) => a.outcome === "failed" && !here.includes(a)).map((a) => a.fix_summary)),
+  ].slice(0, 4);
+  const avoided = failedHere;
 
   // ── Loop breaker ──────────────────────────────────────────────────────────────────────────
   if (streak.length >= MAX_ATTEMPTS) {
@@ -129,13 +143,21 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
     runId,
     kind: "error",
     title: errorText.split("\n")[0].slice(0, 160),
-    detail: { signature, knownFix: Boolean(knownFix), avoided: avoided.length },
+    detail: { signature, location, strongHint: Boolean(strongFix), weakHints: weakFixes.length, avoided: avoided.length },
   });
 
   const context = [
     `Error:\n${errorText}`,
-    knownFix ? `Known fix from the user's history (worked before):\n- ${knownFix.fix_summary}` : "",
-    avoided.length ? `Already tried and failed (do not repeat):\n${avoided.map((a) => `- ${a}`).join("\n")}` : "",
+    strongFix
+      ? `Hint (strong): the same error at the same place was fixed before (${dateFmt.format(new Date(strongFix.created_at))}):\n- ${strongFix.fix_summary}\nConfirm the root cause is the same before reusing it.`
+      : "",
+    weakFixes.length
+      ? `Hints (weak): the same error message was fixed elsewhere, possibly for a different reason:\n${weakFixes.map((a) => `- ${a.fix_summary}`).join("\n")}\nReuse only if your diagnosis finds the same cause.`
+      : "",
+    failedHere.length ? `Already tried here and failed (do not repeat):\n${failedHere.map((a) => `- ${a}`).join("\n")}` : "",
+    failedElsewhere.length
+      ? `Failed for this message elsewhere (different context, may not apply):\n${failedElsewhere.map((a) => `- ${a}`).join("\n")}`
+      : "",
     `Files:\n${files
       .filter((f) => f.path !== "/agents.ts")
       .map((f) => `--- ${f.path}\n${f.content}`)
@@ -169,7 +191,8 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
         error_signature: signature,
         error_message: errorText.slice(0, 2000),
         attempt: attemptNo,
-        fix_summary: fix.summary.slice(0, 500),
+        // Keep the diagnosed cause with the fix, so future hints can be compared cause-to-cause.
+        fix_summary: `${fix.summary} (cause: ${fix.diagnosis})`.slice(0, 500),
         tokens: inputTokens + outputTokens,
       })
       .select("id")
@@ -181,7 +204,14 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
       runId,
       kind: "fix",
       title: `Fix attempt ${attemptNo}: ${fix.summary}`,
-      detail: { attemptId: attemptRow?.id ?? null, signature, diagnosis: fix.diagnosis, before } as unknown as Json,
+      detail: {
+        attemptId: attemptRow?.id ?? null,
+        signature,
+        location,
+        diagnosis: fix.diagnosis,
+        usedKnownFix: fix.usedKnownFix,
+        before,
+      } as unknown as Json,
       tokensIn: inputTokens,
       tokensOut: outputTokens,
     });
@@ -215,6 +245,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
       diagnosis: fix.diagnosis,
       summary: fix.summary,
       knownFix: knownFix ? { summary: knownFix.fix_summary, when: dateFmt.format(new Date(knownFix.created_at)) } : null,
+      usedKnownFix: Boolean(knownFix) && fix.usedKnownFix,
       avoided,
       files: await currentFiles(supabase, id),
       usage: { modelId: resolved.option.id, inputTokens, outputTokens },

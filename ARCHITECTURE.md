@@ -121,8 +121,8 @@ sequenceDiagram
    to this prompt (`recall(userId, projectId, query)`). Builder memory is per *user*, so it carries
    over between projects. The **decision log** for this project is always injected.
 4. **Plan.** The model gateway generates a typed `Plan` (zod schema): screens, user stories,
-   **agents** (role, instructions, tools, memory, hand-offs), data sources, decisions and one open
-   question. The UI shows exactly which memories shaped it.
+   **agents** (role, instructions, tools, memory, hand-offs; zero if the app doesn't need AI, such as
+   a portfolio site), data sources, decisions and one open question. The UI shows exactly which memories shaped it.
 5. **Approve.** Approval locks the plan, writes its decisions to the decision log and stores the
    agents as the project's `agent_spec`. That spec is framework-neutral (§8).
 6. **Build.** The harness streams a typed `files[]` object. As each file path appears, the UI ticks
@@ -243,15 +243,31 @@ There are **four kinds of memory**, each stored where it fits best:
 | --- | --- | --- | --- | --- |
 | **Builder memory** | Durable facts about how this user builds ("deploys on Vercel", "hates modals") | Cognis memory service (vectors + BM25) | User, across projects | Plan, build, fix, chat (hybrid recall) |
 | **Decision log** | Settled project decisions ("Auth: none for v1") | `public.decisions` | Project | Every turn, always injected (not just recalled) |
-| **Fix memory** | error signature → attempted fix → outcome | `public.fix_attempts` | User, across projects | `/fix`, by exact signature |
+| **Fix memory** | error → diagnosed cause → attempted fix → outcome | `public.fix_attempts` | User, across projects | `/fix`, as graded hints |
 | **Agent memory** | What each built agent remembers about *its* end users | Cognis, keyed by the app's end user | Per app end user | The deployed agents (toggle per agent) |
 
 **Why split them?** Semantic recall is fuzzy: right for preferences, wrong for decisions, which
-must *always* apply, and wrong for fixes, which must match *exactly*. Fix memory is a deterministic
-lookup:
-- `errorSignature()` normalizes the error: it strips line numbers, paths, hashes and quoted values,
-  then takes a sha256 prefix.
-- The same bug in a different project, or a week later, hits the same row.
+must *always* apply, and wrong for fixes, which need precise matching.
+
+**Fix memory finds candidates; the model diagnoses.** The same error message can have different root
+causes, so a lookup must never decide the fix on its own:
+- **Two keys per error:**
+  - a **signature**: `errorSignature()` hashes the message with paths, numbers, quoted values and
+    IDs stripped, so "the same symptom" is recognised across runs and projects;
+  - a **location**: `errorLocation()` takes the failing file plus the offending code line from the
+    bundler's code frame.
+- **Graded hints, not answers:**
+  - A fix that succeeded for the same signature *at the same location* is a **strong hint**.
+  - Fixes for the same message elsewhere are **weak hints** ("possibly a different reason").
+  - Failed fixes are "do not repeat" only *at the same location*. Elsewhere they're "may not
+    apply".
+- **Diagnosis first:** the fixer must state the root cause from the *current* code before
+  changing anything. It reports `usedKnownFix` only if its cause matches the hint's.
+- **Every attempt stores its diagnosed cause** with the fix, so future hints are compared cause to
+  cause, not just message to message.
+- **Production:** match on meaning as well. Embed the error, its stack and the diagnosed cause, and
+  retrieve by similarity, so the same cause with different wording is found, and the same wording
+  with a different cause is down-weighted.
 
 **Builder memory = Lyzr Cognis (ADR-006).** Architect runs the open-source Cognis engine
 (`lyzr-cognis`, MIT) in its own service, `memory-service/`: FastAPI in Docker on AWS EC2, behind
@@ -326,9 +342,13 @@ stateDiagram-v2
   - Every fix run stores a `before` snapshot in its trace event, which is what the loop breaker
     restores.
   - Production: a git commit per step in the sandbox repo.
-- **Loop breaker budget:** 3 attempts per error signature per project.
-  - Attempt N sees attempts 1..N-1 as "do not repeat".
-  - Attempt 1 checks whether a previous attempt *succeeded anywhere*, and if so applies that first.
+- **Loop breaker budget:** 3 attempts per *error at the same location* in a project.
+  - If the error comes back at the same place, the pending attempt is marked failed, and attempt N
+    sees attempts 1..N-1 as "do not repeat".
+  - If the same message appears somewhere else, it's treated as a new problem with its own budget.
+    The earlier fix may well have worked.
+  - Known fixes from history are offered as strong or weak hints. The model reuses one only when its
+    own diagnosis finds the same cause.
 - **Fair billing:**
   - Every model call writes a ledger row (`messages.kind`, `tokens_*`, `billed_to`).
   - Fix calls are `billed_to = 'agent'` and draw from a separate agent budget, never the user's

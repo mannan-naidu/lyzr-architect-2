@@ -49,7 +49,14 @@ export function AgentsPanel({ pro }: { pro: boolean }) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-sm text-muted-foreground">
         <BotIcon className="size-8" />
-        Your agents appear here once the plan is drafted.
+        {plan ? (
+          <span className="max-w-sm">
+            This app doesn&apos;t use AI agents: it&apos;s a regular app. To add one, revise the plan, e.g.
+            &ldquo;add an agent that answers visitor questions&rdquo;.
+          </span>
+        ) : (
+          "Your agents appear here once the plan is drafted."
+        )}
         <Button size="sm" variant="outline" onClick={() => setActiveTab("plan")}>
           Go to the plan
         </Button>

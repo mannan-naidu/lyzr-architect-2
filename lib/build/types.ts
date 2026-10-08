@@ -22,6 +22,8 @@ export type FixResponse =
       summary: string;
       /** A fix that worked before for the same error (this or another project). */
       knownFix: { summary: string; when: string } | null;
+      /** The model's own judgement: did the known fix apply after diagnosing? */
+      usedKnownFix: boolean;
       /** Approaches already tried for this error that failed; the fix avoided them. */
       avoided: string[];
       files: WorkspaceFile[];

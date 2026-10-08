@@ -151,7 +151,9 @@ function FixBanner() {
       return;
     }
     toast.success(`Fix ${body.attempt}: ${body.summary}`, {
-      description: body.knownFix ? `Reused a fix that worked on ${body.knownFix.when}. Free.` : "Self-fix, not billed to you.",
+      description: body.usedKnownFix && body.knownFix
+        ? `Same cause as a fix that worked on ${body.knownFix.when}, so it was reused. Free.`
+        : `Cause: ${body.diagnosis} Self-fix, not billed to you.`,
     });
     setFix({ phase: "verifying", signature: body.signature, summary: body.summary, knownFix: body.knownFix?.summary ?? null });
   };

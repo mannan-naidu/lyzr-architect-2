@@ -139,6 +139,11 @@ export function PlanPanel() {
 
       <section className="space-y-2">
         <span className="label-mono text-muted-foreground">Agents</span>
+        {plan.agents.length === 0 ? (
+          <p className="border border-dashed p-4 text-sm text-muted-foreground">
+            No AI agents: this is a regular app. Ask for one under &ldquo;Change something&rdquo; if it needs AI.
+          </p>
+        ) : (
         <div className="grid gap-px border bg-border sm:grid-cols-2">
           {plan.agents.map((a, i) => (
             <article key={a.name} className="space-y-2 bg-background p-4">
@@ -165,6 +170,7 @@ export function PlanPanel() {
             </article>
           ))}
         </div>
+        )}
       </section>
 
       <details className="border p-4 text-sm">

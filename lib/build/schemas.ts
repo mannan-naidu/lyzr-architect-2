@@ -22,7 +22,9 @@ export const planSchema = z.object({
   screens: z
     .array(z.object({ name: z.string(), purpose: z.string() }))
     .describe("2-4 screens of the app UI"),
-  agents: z.array(agentSchema).describe("1-4 AI agents that power the app"),
+  agents: z
+    .array(agentSchema)
+    .describe("0-4 AI agents. Only add agents for work that needs AI (answering, summarising, deciding); return [] for apps that don't, e.g. a marketing site, portfolio or simple tool"),
   dataSources: z.array(z.string()).describe("Documents, APIs or databases the agents use"),
   decisions: z
     .array(z.string())
@@ -50,7 +52,10 @@ export const generatedFilesSchema = z.object({
 export type GeneratedFiles = z.infer<typeof generatedFilesSchema>;
 
 export const fixSchema = z.object({
-  diagnosis: z.string().describe("One sentence: the root cause"),
+  diagnosis: z.string().describe("One sentence: the root cause, found from the current code and error"),
+  usedKnownFix: z
+    .boolean()
+    .describe("True only if a fix from the user's history applied because its root cause matches yours"),
   summary: z.string().describe("One sentence: what you changed"),
   files: z
     .array(z.object({ path: z.string(), content: z.string().describe("Full new file contents") }))
