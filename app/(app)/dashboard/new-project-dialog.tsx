@@ -94,7 +94,7 @@ export function NewProjectDialog({
                 <BrainIcon className="size-4" /> Give this agent memory
               </span>
               <span className="block text-sm text-muted-foreground">
-                The agent remembers users&apos; preferences and past conversations via Memori. You can view
+                The agent remembers users&apos; preferences and past conversations via Lyzr Cognis. You can view
                 and delete memories anytime.
               </span>
             </span>

@@ -22,7 +22,7 @@ function toolStubPy(tool: string): string {
 
 function lyzr(agents: readonly PlannedAgent[], app: string): string {
   return `# ${app}: agents for Lyzr Agent Studio (pip install lyzr-agent-api)
-# Memory-enabled agents use Lyzr Cognis long-term memory (the production twin of Architect's Memori layer).
+# Memory-enabled agents use Lyzr Cognis long-term memory (the same engine behind Architect's builder memory).
 import os
 from lyzr_agent_api import AgentAPI, AgentConfig, ChatRequest
 

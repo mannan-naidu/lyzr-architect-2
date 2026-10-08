@@ -14,6 +14,78 @@
 
 ---
 
+## My understanding of Lyzr, Architect and who it's for
+
+**What Lyzr does.** Lyzr is an enterprise **agent infrastructure** company: "an agent
+infrastructure platform focused on production" (CEO Siva Surendira). Its core business is helping
+large organisations design, deploy and run AI agents **inside their own environments** (private
+cloud or on-prem), especially in regulated industries. It does this through three layers:
+- **Lyzr Agent Studio:** a low-code platform where teams build, deploy and scale their own agents.
+- **Lyzr Blocks:** the building blocks agents use, such as **Cognis** (memory), knowledge bases and
+  guardrails. Cognis is the default memory for Studio agents and is also open source.
+- **Agentic Transformation Consultants (ATCs):** a services team that gets customers from idea to
+  a working prototype. By the CEO's own account, about 90% of customers go live because of them.
+
+Customers are enterprises and consulting firms (reported: KPMG, Deloitte; Accenture is an investor
+and co-seller), with deals in the hundreds of thousands of dollars.
+
+**What Architect (architect.new) is.** A "vibe-coding" platform launched in February 2026. You
+describe a business process in plain English, and it builds a full-stack **agentic app**: a web UI,
+plus a multi-agent backend whose agents run on Lyzr Studio. A QA agent fixes the generated code
+before you see it. Under the hood it draws on Lyzr's library of 1,000+ agent blueprints.
+
+**Who Architect is for.** Primarily **non-technical business users inside enterprises**: the
+launch example is an insurance underwriter building an underwriting-analysis system. Then two
+groups who build *for* them:
+- **Consultants:** Lyzr's ATCs and partner firms, who need prototypes in a day, not a quarter.
+- **Developers and technical teams:** they have to take those apps to production, own the code,
+  and fit it into their stack. The 2.0 brief explicitly adds them.
+
+A self-serve audience (founders, prosumers, students at Lyzr's workshops) is the top of the
+funnel.
+
+**Why Lyzr is building it** (my reading, from the sources below):
+1. **Productising the consultants.** If 90% of go-lives depend on ATCs, growth is limited by
+   headcount. Architect packages the blueprint library and ATC know-how into a product, so more
+   customers reach production without a consultant, at software margins.
+2. **Crossing the prototype-to-production gap.** Lyzr positions itself against Microsoft Copilot
+   and Salesforce Agentforce, which it says "struggle to move beyond early prototypes". Architect
+   produces a working app on production agent infrastructure instead of a demo.
+3. **Feeding the core platform.** Every agent Architect builds runs on Lyzr Studio and Blocks, so
+   Architect brings usage (and credits) to the business that already makes money. It's also a
+   self-serve way in, alongside enterprise sales.
+4. **An interface for the whole organisation.** In the CEO's words, Lyzr becomes "an interface
+   for not only multiple models, but also agents that the organization can publish to employees".
+   Architect is how those agents get a usable front end.
+
+**How Architect 2.0 fits that strategy.**
+- **For the business user:** a familiar flow with a guided tour. Memory means the tenth app is
+  faster than the first and repeat failures are fixed for free. Apps can be public and *found*
+  (SEO + GEO), which extends Architect from internal tools to customer-facing apps.
+- **For consultants:** builder memory and the decision log carry a client's standards across
+  projects. Fix memory turns one consultant's fix into everyone's next fix.
+- **For developers:**
+  - Pro mode (diffs, trace, logs), GitHub ownership and any model.
+  - **Compile to** any framework (LangGraph, CrewAI, OpenAI Agents SDK, TypeScript). This lowers
+    the lock-in objection, while **Lyzr stays the default**, with Cognis memory on deploy.
+- **For Lyzr:** Architect's own memory runs on **Lyzr Cognis**, Lyzr's product proving itself
+  inside Lyzr's builder. That's a capability architect.new doesn't use today.
+
+**Tension worth naming.** Framework-agnostic export helps adoption and developer trust, but it can
+pull usage away from Lyzr Studio. My answer: Lyzr is the default and the only one-click deploy
+target (with Cognis memory, guardrails and on-prem). The other frameworks are an exit ramp that
+makes enterprises comfortable saying yes.
+
+Sources: [SiliconANGLE launch article (Feb 2026)](https://siliconangle.com/2026/02/06/exclusive-startup-lyzr-ai-launches-app-builder-aimed-moving-agents-production-volume/) ·
+[Lyzr Architect docs](https://docs.lyzr.ai/enterprise/architect/introduction/overview/introduction) ·
+[Product Hunt launch](https://www.producthunt.com/posts/architect-by-lyzr) ·
+[Lyzr Series A+ press release](https://norfolkdailynews.com/online_features/press_releases/lyzr-ai-raises-series-a-at-250-million-valuation/article_05360f6f-a55c-5979-9033-1726e051a40f.html) ·
+[Latka founder interview](https://getlatka.com/interviews/lyzrai-siva-surendira-ceo-2026) ·
+[Lyzr Cognis](https://docs.lyzr.ai/enterprise/lyzr-blocks/cognis/overview) · our own research in
+[`docs/RESEARCH.md`](docs/RESEARCH.md). Revenue and customer figures are self-reported by Lyzr.
+
+---
+
 ## What only Architect 2.0 does (presented first)
 
 1. **Fix memory and a loop breaker.**

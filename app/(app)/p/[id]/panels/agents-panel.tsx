@@ -84,7 +84,7 @@ export function AgentsPanel({ pro }: { pro: boolean }) {
         <h2 className="text-xl font-semibold">The agents behind {plan.title}</h2>
         <p className="max-w-2xl text-sm text-muted-foreground">
           One spec, any framework. Turn on memory for an agent and it remembers each of your end users across sessions
-          (Memori in this prototype, Lyzr Cognis in production).
+          (Lyzr Cognis, the same engine as Architect's own memory).
         </p>
       </div>
 

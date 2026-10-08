@@ -164,7 +164,7 @@ export default function Home() {
       <footer className="border-t">
         <div className="mx-auto flex max-w-6xl items-center justify-between border-x px-6 py-4">
           <span className="label-mono text-muted-foreground">Architect 2.0 · Lyzr TPM assignment</span>
-          <span className="label-mono text-muted-foreground">Memory by Memori</span>
+          <span className="label-mono text-muted-foreground">Memory by Lyzr Cognis</span>
         </div>
       </footer>
     </div>
