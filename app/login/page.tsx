@@ -1,4 +1,4 @@
-import { BrainIcon, ReceiptIcon, RotateCcwIcon } from "lucide-react";
+import { BotIcon, BrainIcon, SearchIcon } from "lucide-react";
 
 import { GitHubIcon, GoogleIcon } from "@/components/icons";
 import { Logo } from "@/components/logo";
@@ -9,9 +9,9 @@ import { safeNextPath } from "@/lib/auth";
 import { signInAsGuest, signInWithProvider } from "./actions";
 
 const POINTS = [
-  { icon: BrainIcon, text: "Remembers your stack, style and decisions across projects" },
-  { icon: RotateCcwIcon, text: "Never retries a fix that already failed" },
-  { icon: ReceiptIcon, text: "Its own mistakes aren't billed to you" },
+  { icon: SearchIcon, text: "Found on Google and AI answer engines (SEO + GEO built in)" },
+  { icon: BrainIcon, text: "Remembers your stack, style, decisions and fixes across projects" },
+  { icon: BotIcon, text: "Agents in Lyzr, LangGraph, CrewAI, OpenAI Agents or TypeScript" },
 ];
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {

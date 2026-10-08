@@ -1,8 +1,10 @@
-# Architect 2.0 — Architect remembers
+# Architect 2.0
 
-**Architect 2.0** is a vibe-coding platform for AI agents that works for both non-technical users
-and developers. Describe the agent you want, and Architect plans it, writes the files and shows a
-live preview. **Simple mode** is just chat plus preview. **Pro mode** adds the file tree, diffs,
+> **From prompt to production: AI apps that get found, remember, and run any agent.**
+
+**Architect 2.0** is a vibe-coding platform for agentic apps, for non-technical users and developers.
+Describe an app; Architect plans it, writes the files, shows a live preview and ships it, with
+SEO + GEO built in and agents in the framework you choose. **Simple mode** is just chat plus preview. **Pro mode** adds the file tree, diffs,
 logs and the agent's trace. What makes it different is that **Architect remembers**. Using
 [Lyzr Cognis](https://docs.lyzr.ai/cognis/overview) (open source, running as a Docker service on AWS), the builder agent keeps each user's
 project decisions, preferences and past fixes across sessions. Users can also give the agents they

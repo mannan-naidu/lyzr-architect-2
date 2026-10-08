@@ -1,6 +1,6 @@
 # Architect 2.0: Architecture
 
-> **Architect remembers, so you never pay for the same mistake twice.**
+> **From prompt to production: AI apps that get found, remember, and run any agent.**
 >
 > Architect 2.0 is a vibe-coding platform for AI agents, for people who can't code and for people
 > who can. This document walks through what happens from the moment a user types a prompt to the
@@ -40,10 +40,11 @@ PNG. Mermaid versions of the main views are below, so they render on GitHub.*
 
 ## 1. The idea in one paragraph
 
-Every vibe-coding tool has the same top complaint: *you pay for the AI's mistakes*. The agent
-breaks your app, you pay for the fix, the fix fails, and you pay again for the same failed fix
-because the agent has forgotten it already tried it. Architect 2.0 adds a **memory layer** to the
-standard build loop:
+Architect 2.0 takes a user from **prompt to production**. It builds apps that **get found** (SEO +
+GEO built in, so Google *and* AI answer engines can read and quote them), that **remember** (a
+builder that learns how each user builds, plus memory for the agents users ship), and that **run
+any agent** (one agent spec compiled to Lyzr, LangGraph, CrewAI, OpenAI Agents SDK or TypeScript).
+The memory layer is what makes the loop feel different from every other vibe-coding tool:
 - **Fix memory** never repeats a failed fix and reuses fixes that worked, across all your projects.
 - A **loop breaker** stops after three failed attempts, rolls back, and asks one question.
 - A **fair-billing ledger** charges the agent, not you, for its own fixes.

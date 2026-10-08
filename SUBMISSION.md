@@ -1,6 +1,8 @@
 # Architect 2.0: submission
 
-> **Architect remembers, so you never pay for the same mistake twice.**
+> **From prompt to production: AI apps that get found, remember, and run any agent.**
+>
+> Describe an app; Architect plans it, builds it and ships it, with SEO + GEO built in, a memory that learns how you build, and agents in Lyzr, LangGraph, CrewAI or OpenAI Agents.
 
 | Field | Value |
 | --- | --- |
@@ -69,11 +71,17 @@ matter. The new ideas live *inside* that flow, not in a new one.
 
 ### Why would a non-technical user pick Architect over Replit, Lovable or Emergent?
 
-Because Architect doesn't charge you for its own mistakes, and it doesn't make the same mistake
-twice.
+Because it takes you from an idea to an app people can actually find, and it gets better at
+building for you every time.
 
-The biggest complaint about every vibe-coding tool is paying, again and again, for the AI to break
-your app and then fail to fix it. Architect remembers every fix it has tried for you:
+- **Found, not just built.** Switch on SEO + GEO when you start, and Architect builds a page that
+  Google and AI answer engines (ChatGPT, Perplexity, Claude) can read and quote: no SEO knowledge
+  needed. Edit the content yourself in a WordPress-style editor.
+- **Agents, not just screens.** Your app comes with working AI agents, and you can see and switch
+  on their memory.
+
+And when something breaks, you don't pay for the AI's mistakes. Architect remembers every fix it
+has tried for you:
 - When an error comes back, it reuses the fix that worked and skips the ones that didn't.
 - After three failed tries it stops, rolls back to your last working version, and asks you one
   plain question.
@@ -111,8 +119,8 @@ It also adds:
 
 ## Loom script (about 5 minutes)
 
-1. **(0:00) Hook.** "Every vibe-coding tool charges you for its own mistakes. Architect remembers,
-   so you never pay for the same mistake twice."
+1. **(0:00) Hook.** "From prompt to production: AI apps that get found, remember, and run any agent." Then one line each: get found (SEO + GEO), remember (memory across
+   projects), run any agent (compile to any framework).
 2. **(0:20) Familiar start.** Landing → Try the demo → workspace. The tour runs: chat, plan,
    preview, memory, ship. "Nothing new to learn."
 3. **(0:50) Plan.** Show the SEO + GEO switch at the start (set when the project was created). Generate the plan. Point out "What I remembered" and the agents table. Approve

@@ -61,11 +61,12 @@ export default function Home() {
 
           <div className="max-w-4xl pt-10 pb-14">
             <h1 className="text-5xl leading-[0.95] font-semibold sm:text-7xl">
-              Build agents that remember you.
+              From prompt to production.
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-white/80">
-              Describe it, watch it get built, ship it. Architect remembers your decisions and every
-              fix — so you never pay for the same mistake twice.
+            <p className="mt-6 max-w-2xl text-lg text-white/80">
+              AI apps that get found, remember, and run any agent. Describe it and Architect plans,
+              builds and ships it: SEO + GEO built in, a memory that learns how you build, and agents
+              in Lyzr, LangGraph, CrewAI or OpenAI Agents.
             </p>
 
             {/* GET → /dashboard?prompt=… ; proxy.ts sends signed-out users through /login first. */}

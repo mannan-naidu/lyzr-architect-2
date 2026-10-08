@@ -6,7 +6,7 @@
 assignment (brief: https://hiring.lyzrarchitect.space/). It extends architect.new and serves both
 non-technical users and developers.
 
-**Angle: "Architect remembers, so you never pay for the same mistake twice."** Persistent memory via **Lyzr Cognis** (open source) running in `memory-service/` (Docker on AWS EC2, ADR-006). The
+**Hook: "From prompt to production: AI apps that get found, remember, and run any agent."** Persistent memory via **Lyzr Cognis** (open source) running in `memory-service/` (Docker on AWS EC2, ADR-006). The
 builder agent remembers each user's project decisions, preferences and past fixes across sessions.
 Users can toggle memory on for the agents they build. A Memory panel shows what is stored and lets
 users edit or delete it.

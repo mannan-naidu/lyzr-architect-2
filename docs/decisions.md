@@ -150,3 +150,27 @@ lenses and other shared features are presented last.
   to a Qdrant cluster (ARCHITECTURE.md §13).
 - ⚠️ Edit uses Cognis internals (pinned to `lyzr-cognis==1.0.0`), because the open-source version
   has no public update method.
+
+---
+
+## ADR-007: Positioning: "From prompt to production: AI apps that get found, remember, and run any agent."
+
+- **Date:** 2026-10-08
+- **Status:** Accepted (supersedes the hook in ADR-005; the feature set and order are unchanged)
+
+**Context.** The memory-only hook ("Architect remembers, so you never pay for the same mistake
+twice") undersold the scope and led with a money complaint. The owner wanted a hook that covers
+everything: complete apps, SEO + GEO, memory and multiple agents.
+
+**Decision.** Hook: **"From prompt to production: AI apps that get found, remember, and run any agent."**
+- **Prompt to production:** complete apps.
+- **Get found:** SEO + GEO, for Google and AI answer engines.
+- **Remember:** builder memory and agent memory (Lyzr Cognis).
+- **Run any agent:** one spec compiled to any framework.
+
+Fix memory and fair billing remain headline *features*, not the hook.
+
+**Consequences.**
+- ✅ Matches the full feature set and is clear to non-technical users.
+- ⚠️ "Production" describes the product vision. The prototype's hosting and agent runs are
+  simulated, so README, ARCHITECTURE.md §16 and SUBMISSION.md keep their "real vs simulated" notes.

@@ -67,7 +67,7 @@ From docs.architect.new and the production bundles:
 
 ## 3. Our product thesis (adopted 2026-10-04)
 
-> **"Architect remembers, so you never pay for the same mistake twice."**
+> **"From prompt to production: AI apps that get found, remember, and run any agent."** (updated 2026-10-08; the original memory-only hook was "Architect remembers, so you never pay for the same mistake twice", see ADR-007)
 
 Research (`docs/RESEARCH.md`) showed two things:
 - The #1 complaint on every vibe-coding platform is paying for the AI's own mistakes. Doom loops
@@ -342,6 +342,7 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-08 | Replace the "never pay for the same mistake twice" hook with one covering the whole scope: production apps, SEO + GEO, memory, any agent | New hook "From prompt to production: AI apps that get found, remember, and run any agent." on landing, login, README, ARCHITECTURE, SUBMISSION; ADR-007 | ✅ done |
 | 2026-10-07 | architect.new lacks a **search bar**: point users to the feature they search for; text matching now, semantic search for production | `lib/features.ts` (feature index + ranking), ⌘K palette jumps to tab/sub-view/Pro, ARCHITECTURE §9.1 | ✅ built |
 | 2026-10-06 | One memory system only, not plain Postgres; use **Lyzr Cognis** (open source); host the backend with **Docker on AWS free tier** and explain why not everything is on Vercel | `memory-service/` (FastAPI + Cognis + Caddy, EC2 setup script); Memori removed; ADR-006; ARCHITECTURE §4, §12 | 🔨 code done; EC2 launch pending |
 | 2026-10-05 | SEO + GEO must be chosen **at the start** (not in Ship) and produce a predominantly **HTML** page; report at the end | New-project dialog + Plan switch; static-first build rules; pre-render snapshot → `/dist/index.html`; Ship shows only the report (audited on rendered HTML) | ✅ built |
