@@ -342,6 +342,7 @@ Newest first. Each note: idea → where it lands in this plan → status.
 
 | Date | Owner idea | Lands in | Status |
 | --- | --- | --- | --- |
+| 2026-10-09 | Show Architect at the intersection of app builders, agent platforms and coding tools in the answers; say "placeholder for now / in production" instead of "limitation"; one cohesive Loom script; plan questions should be clickable like Claude's | SUBMISSION.md answers, other comments and Loom script; ARCHITECTURE §16 CMS row; Plan tab one-click answers (`questionOptions`) | ✅ done |
 | 2026-10-09 | Say why Architect may be Lyzr-agents-only (unknown; business reasons assumed) and that this is a crowded space with giants, so positioning must be clear | SUBMISSION.md "Why does Architect only build Lyzr agents?", "Positioning in a crowded market" (app builders vs coding tools vs agent builders); both form answers + other comments | ✅ drafted, owner to review |
 | 2026-10-08 | Add my understanding of Lyzr's business (agents in client environments, Studio, Architect), Architect's target users and why Lyzr builds it, to the submission | SUBMISSION.md "My understanding of Lyzr, Architect and who it's for" | ✅ drafted, owner to review |
 | 2026-10-08 | Replace the "never pay for the same mistake twice" hook with one covering the whole scope: production apps, SEO + GEO, memory, any agent | New hook "From prompt to production: AI apps that get found, remember, and run any agent." on landing, login, README, ARCHITECTURE, SUBMISSION; ADR-007 | ✅ done |

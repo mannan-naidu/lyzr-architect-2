@@ -732,7 +732,7 @@ Builder memories don't live in Postgres. They're in the Cognis memory service's 
 | Framework code generation (5 targets), agent memory toggle | |
 | GitHub push (Octokit, one commit), repo listing | |
 | Security pre-check, SEO/GEO audit + generated files | |
-| CMS with WordPress REST import | |
+| CMS with WordPress REST import; FAQs feed JSON-LD and `llms.txt` | CMS pages and posts rendered into the deployed app's HTML (placeholder for now) |
 
 ---
 
