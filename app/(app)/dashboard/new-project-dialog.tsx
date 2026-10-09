@@ -1,6 +1,6 @@
 "use client";
 
-import { BrainIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { BrainIcon, FileTextIcon, PlusIcon, SearchIcon, type LucideIcon } from "lucide-react";
 import { useActionState, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -22,11 +22,40 @@ import { createProject, type CreateProjectState } from "./actions";
 const SELECT_CLASS =
   "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30";
 
+/** The three switches, as compact rows: short label + one line of help. */
+const OPTIONS: { name: string; icon: LucideIcon; label: string; help: string; defaultChecked?: boolean }[] = [
+  {
+    name: "memory_enabled",
+    icon: BrainIcon,
+    label: "Memory",
+    help: "Agents remember their users via Lyzr Cognis; you can view and delete it.",
+    defaultChecked: true,
+  },
+  {
+    name: "seo_enabled",
+    icon: SearchIcon,
+    label: "SEO + GEO (public website)",
+    help: "Builds static-first HTML and ships meta tags, JSON-LD, sitemap and llms.txt.",
+  },
+  {
+    name: "cms_enabled",
+    icon: FileTextIcon,
+    label: "Content mode",
+    help: "Edit pages, posts and FAQs without code, or import them from WordPress.",
+  },
+];
+
 export function NewProjectDialog({
   initialPrompt,
+  initialName,
+  initialSeo = false,
+  initialCms = false,
   defaultOpen = false,
 }: {
   initialPrompt?: string;
+  initialName?: string;
+  initialSeo?: boolean;
+  initialCms?: boolean;
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -43,8 +72,10 @@ export function NewProjectDialog({
           New project
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <form action={formAction} className="space-y-5">
+      {/* Capped to the viewport: the body scrolls, the header and buttons stay visible. */}
+      <DialogContent className="flex max-h-[min(90dvh,760px)] flex-col gap-0 p-0 sm:max-w-lg">
+        <form action={formAction} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
           <DialogHeader>
             <DialogTitle>New project</DialogTitle>
             <DialogDescription>Name it, pick a framework, and decide if it should remember and be found.</DialogDescription>
@@ -54,7 +85,15 @@ export function NewProjectDialog({
             <label htmlFor="name" className="text-sm font-medium">
               Name
             </label>
-            <Input id="name" name="name" required maxLength={100} placeholder="Support triage agent" autoFocus />
+            <Input
+              id="name"
+              name="name"
+              required
+              maxLength={100}
+              defaultValue={initialName}
+              placeholder="Yoga studio site"
+              autoFocus
+            />
             {state.fieldErrors?.name ? (
               <p className="text-sm text-destructive">{state.fieldErrors.name[0]}</p>
             ) : null}
@@ -70,7 +109,8 @@ export function NewProjectDialog({
               rows={3}
               maxLength={2000}
               defaultValue={initialPrompt}
-              placeholder="Answers customer questions from our docs and escalates to Slack."
+              placeholder="A site for my yoga studio with schedules, pricing, FAQs and an assistant for class questions."
+              className="max-h-40"
             />
           </div>
 
@@ -87,35 +127,38 @@ export function NewProjectDialog({
             </select>
           </div>
 
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-checked:border-primary has-checked:bg-primary/5">
-            <input type="checkbox" name="memory_enabled" defaultChecked className="mt-1 size-4 accent-primary" />
-            <span className="space-y-1">
-              <span className="flex items-center gap-1.5 text-sm font-medium">
-                <BrainIcon className="size-4" /> Give this agent memory
-              </span>
-              <span className="block text-sm text-muted-foreground">
-                The agent remembers users&apos; preferences and past conversations via Lyzr Cognis. You can view
-                and delete memories anytime.
-              </span>
-            </span>
-          </label>
-
-          <label className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 has-checked:border-primary has-checked:bg-primary/5">
-            <input type="checkbox" name="seo_enabled" className="mt-1 size-4 accent-primary" />
-            <span className="space-y-1">
-              <span className="flex items-center gap-1.5 text-sm font-medium">
-                <SearchIcon className="size-4" /> Public website: optimise for search and AI answers
-              </span>
-              <span className="block text-sm text-muted-foreground">
-                SEO + GEO. Builds static-first so every word is real HTML, then deploys a pre-rendered page with meta tags,
-                sitemap, JSON-LD and llms.txt. Best switched on now; you can change it in the Plan step.
-              </span>
-            </span>
-          </label>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">Options</legend>
+            <div className="divide-y rounded-lg border">
+              {OPTIONS.map(({ name, icon: Icon, label, help, defaultChecked }) => (
+                <label
+                  key={name}
+                  className="flex cursor-pointer items-start gap-3 p-3 transition-colors has-checked:bg-primary/5 hover:bg-accent/40"
+                >
+                  <input
+                    type="checkbox"
+                    name={name}
+                    defaultChecked={
+                      name === "seo_enabled" ? initialSeo : name === "cms_enabled" ? initialCms : defaultChecked
+                    }
+                    className="mt-0.5 size-4 accent-primary"
+                  />
+                  <span className="min-w-0 space-y-0.5">
+                    <span className="flex items-center gap-1.5 text-sm font-medium">
+                      <Icon className="size-3.5" /> {label}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">{help}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-muted-foreground">You can change these later in Plan and Ship.</p>
+          </fieldset>
 
           {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="m-0 border-t p-4">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancel
             </Button>

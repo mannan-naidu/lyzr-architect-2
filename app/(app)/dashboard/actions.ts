@@ -13,6 +13,7 @@ const createProjectSchema = z.object({
   framework: z.enum(AGENT_FRAMEWORKS),
   memory_enabled: z.boolean(),
   seo_enabled: z.boolean(),
+  cms_enabled: z.boolean(),
 });
 
 export type CreateProjectState = { error?: string; fieldErrors?: Record<string, string[]> };
@@ -30,6 +31,7 @@ export async function createProject(
     framework: formData.get("framework"),
     memory_enabled: formData.get("memory_enabled") === "on",
     seo_enabled: formData.get("seo_enabled") === "on",
+    cms_enabled: formData.get("cms_enabled") === "on",
   });
   if (!parsed.success) {
     return { fieldErrors: z.flattenError(parsed.error).fieldErrors };
