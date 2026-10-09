@@ -183,10 +183,28 @@ export function PlanPanel() {
       </details>
 
       {plan.openQuestion ? (
-        <p className="border-l-2 border-[var(--yellow)] pl-3 text-sm">
+        <div className="space-y-2 border-l-2 border-[var(--yellow)] pl-3 text-sm" data-tour="plan-question">
           <span className="label-mono block text-[var(--yellow)]">Open question</span>
-          {plan.openQuestion}
-        </p>
+          <p>{plan.openQuestion}</p>
+          {plan.questionOptions.length ? (
+            <div className="flex flex-wrap gap-2">
+              {plan.questionOptions.map((option) => (
+                <Button
+                  key={option}
+                  variant="outline"
+                  size="sm"
+                  disabled={pending}
+                  onClick={() => void generate(`Answer to "${plan.openQuestion}": ${option}`)}
+                >
+                  {option}
+                </Button>
+              ))}
+            </div>
+          ) : null}
+          <p className="text-xs text-muted-foreground">
+            {plan.questionOptions.length ? "Pick one to update the plan, or" : "Answer it"} under &ldquo;Change something&rdquo;.
+          </p>
+        </div>
       ) : null}
 
       <div className="space-y-2">

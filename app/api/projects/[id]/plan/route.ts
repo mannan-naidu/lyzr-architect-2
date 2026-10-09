@@ -4,7 +4,7 @@ import { z } from "zod";
 import { ModelUnavailableError, resolveModel } from "@/lib/ai/registry.server";
 import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.server";
 import { PLANNER_INSTRUCTIONS } from "@/lib/build/prompts";
-import { planSchema } from "@/lib/build/schemas";
+import { planOutputSchema } from "@/lib/build/schemas";
 import { logEvent, recordUsage } from "@/lib/build/store.server";
 import { formatMemoryContext, getMemoryProvider } from "@/lib/memory/provider.server";
 import type { RecalledMemory } from "@/lib/memory/types";
@@ -64,7 +64,7 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
       model: resolved.model,
       instructions: [PLANNER_INSTRUCTIONS, formatMemoryContext(recalled)].filter(Boolean).join("\n\n"),
       prompt: [`Plan this app (framework for agents: ${project.framework}):\n${ask}`, previous].filter(Boolean).join("\n\n"),
-      output: Output.object({ schema: planSchema }),
+      output: Output.object({ schema: planOutputSchema }),
       maxOutputTokens: 6000,
     });
     const plan = result.output;

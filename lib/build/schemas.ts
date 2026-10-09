@@ -14,7 +14,8 @@ export const agentSchema = z.object({
   handsOffTo: z.array(z.string()).describe("Names of agents it passes work to; empty if none"),
 });
 
-export const planSchema = z.object({
+/** What the planner model returns. Every field is required so strict structured output works. */
+export const planOutputSchema = z.object({
   title: z.string().describe("App name, 2-4 words"),
   summary: z.string().describe("Two sentences: what the app does and for whom"),
   audience: z.string().describe("Who uses it"),
@@ -32,9 +33,17 @@ export const planSchema = z.object({
   openQuestion: z
     .string()
     .describe("The single most important question to ask the user, or an empty string if none"),
+  questionOptions: z
+    .array(z.string())
+    .describe("2-4 short answers to openQuestion the user can pick with one click; [] if there is no question"),
 });
 
-export type Plan = z.infer<typeof planSchema>;
+/** A stored plan. Plans saved before questionOptions existed parse with no options. */
+export const planSchema = planOutputSchema.extend({
+  questionOptions: z.array(z.string()).default([]),
+});
+
+export type Plan = z.output<typeof planSchema>;
 export type PlannedAgent = z.infer<typeof agentSchema>;
 
 export const generatedFilesSchema = z.object({
