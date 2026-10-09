@@ -71,10 +71,25 @@ funnel.
 - **For Lyzr:** Architect's own memory runs on **Lyzr Cognis**, Lyzr's product proving itself
   inside Lyzr's builder. That's a capability architect.new doesn't use today.
 
-**Tension worth naming.** Framework-agnostic export helps adoption and developer trust, but it can
-pull usage away from Lyzr Studio. My answer: Lyzr is the default and the only one-click deploy
-target (with Cognis memory, guardrails and on-prem). The other frameworks are an exit ramp that
-makes enterprises comfortable saying yes.
+**Why does Architect only build Lyzr agents?** Lyzr hasn't said publicly, so I don't know the
+actual reason. Every product decision like this is a business decision, though, and these are the
+reasons I'd expect:
+1. **Revenue and the funnel.** Agents running on Lyzr Studio consume Lyzr credits and lead to
+   enterprise deals. An agent exported to LangGraph earns Lyzr nothing after the build.
+2. **The enterprise promise.** Guardrails, Responsible AI checks, audit logs, Cognis memory and
+   on-prem deployment are what Lyzr sells to regulated customers. It can only guarantee them on its
+   own runtime.
+3. **Quality and focus.** One runtime means one target to test, one QA agent and one set of 1,000+
+   blueprints. Five frameworks would multiply the failure modes for a young product.
+4. **Simplicity for the core user.** A non-technical underwriter doesn't know what LangGraph is,
+   and a framework choice is just friction for them.
+
+**Why Architect 2.0 adds other frameworks anyway.** The brief adds developers, and their first
+objection is lock-in. "Compile to" answers that objection without giving up the reasons above:
+- **Lyzr stays the default** and the only one-click deploy target, with Cognis memory, guardrails
+  and on-prem.
+- **Other frameworks are an export**, an exit ramp that makes an enterprise comfortable saying yes.
+- **Every exported agent keeps the same spec**, so moving back to Lyzr is easy.
 
 Sources: [SiliconANGLE launch article (Feb 2026)](https://siliconangle.com/2026/02/06/exclusive-startup-lyzr-ai-launches-app-builder-aimed-moving-agents-production-volume/) ·
 [Lyzr Architect docs](https://docs.lyzr.ai/enterprise/architect/introduction/overview/introduction) ·
@@ -83,6 +98,30 @@ Sources: [SiliconANGLE launch article (Feb 2026)](https://siliconangle.com/2026/
 [Latka founder interview](https://getlatka.com/interviews/lyzrai-siva-surendira-ceo-2026) ·
 [Lyzr Cognis](https://docs.lyzr.ai/enterprise/lyzr-blocks/cognis/overview) · our own research in
 [`docs/RESEARCH.md`](docs/RESEARCH.md). Revenue and customer figures are self-reported by Lyzr.
+
+---
+
+## Positioning in a crowded market
+
+This space is crowded and the competitors are giants:
+- **App builders:** Lovable, Replit, Bolt, v0 (Vercel), Base44 (Wix), Emergent.
+- **AI coding tools:** Cursor, Windsurf, Trae (ByteDance), GitHub Copilot, Claude Code, Codex.
+- **Model companies:** Anthropic, OpenAI and Google, which ship builders of their own.
+
+Architect can't win on "best code generator", because everyone uses the same frontier models. It
+needs one clear position:
+
+| Category | Examples | Who drives | What you get | Where it runs |
+| --- | --- | --- | --- | --- |
+| **AI app builders** | Lovable, Replit, Bolt, v0, Emergent | Anyone, in the browser, by prompting | A whole hosted app; you rarely read the code | Their cloud, one click |
+| **AI coding tools** | Cursor, Trae, Windsurf, Claude Code, Codex, Copilot | Developers, in their own repo | Code changes inside an IDE or terminal | Your machine; you own build, deploy and infra |
+| **Agent builders** | Lyzr Studio, n8n, Relevance AI, OpenAI AgentKit | Ops and technical teams | Agents and workflows, not a full app | The vendor's runtime |
+| **Architect 2.0** | — | Business users, with developers in Pro mode | An **agentic app**: a UI plus agents, ready for production | Lyzr runtime by default; exportable |
+
+**Our position:** *the app builder for production AI apps*. Architect builds apps that get found
+(SEO + GEO), that remember (Cognis), and whose agents run on Lyzr or any framework, backed by an
+enterprise agent company. App builders stop at a hosted prototype. Coding tools assume you're a
+developer. Agent builders don't give you an app. Architect covers all three.
 
 ---
 
@@ -153,8 +192,9 @@ The form's project fields, in its order:
 
 ### Why would a non-technical user pick your platform? (vs Replit, Lovable, Emergent)
 
-Lovable, Replit and Emergent stop at "it runs". Architect takes you from prompt to production: AI
-apps that get found, remember, and run any agent.
+App builders are a crowded space, and Lovable, Replit and Emergent are good at getting an app to
+"it runs". Architect's position is narrower: it takes you from prompt to production, with AI apps
+that get found, remember, and run any agent.
 
 1. **Get found.** Switch on SEO + GEO when you start a project. Architect builds the site
    HTML-first and adds meta tags, a sitemap, structured data and `llms.txt`, so Google can rank it
@@ -178,9 +218,9 @@ tour on day one, plus the usual live preview, model choice and GitHub push.
 
 ### Why would a technical user pick your platform? (vs Claude Code, Codex, Cursor)
 
-Claude Code, Codex and Cursor are excellent at editing a repo you already have. Architect covers
-what sits around the code: agents in any framework, memory that spans projects, and production
-defaults.
+Claude Code, Codex and Cursor are excellent at editing a repo you already have, and Architect
+doesn't try to beat them at that. It covers what sits around the code: agents in any framework,
+memory that spans projects, and production defaults.
 
 1. **Run any agent.** One agent spec compiles to Lyzr, LangGraph, CrewAI, OpenAI Agents SDK or
    TypeScript behind one contract (`POST /agents/{name}/run`). The UI never depends on the
@@ -208,10 +248,18 @@ those tools rather than replacing them.
 
 How I read the opportunity: Lyzr builds production agents inside clients' environments, Agent
 Studio lets teams build their own, and Architect is the vibe-coding front door to both, for
-business users and consultants who need a working app and not just a demo. So I built Architect
-2.0 around three gaps between a prototype and production: being found (SEO + GEO), memory (Lyzr's
-own open-source Cognis, self-hosted on AWS), and agents in any framework. The full reasoning is in
-`SUBMISSION.md` in the repo.
+business users and consultants who need a working app and not just a demo.
+
+This is a crowded space with giants: Lovable and Replit build apps, Cursor and Claude Code serve
+developers, and the model companies ship their own builders. Architect can't win on "best code
+generator", because everyone uses the same models. It has to win on a clear position: production
+AI apps, backed by an enterprise agent company. So I built Architect 2.0 around three gaps between
+a prototype and production: being found (SEO + GEO), memory (Lyzr's own open-source Cognis,
+self-hosted on AWS), and agents in any framework, with Lyzr as the default.
+
+I don't know why Lyzr currently limits Architect to Lyzr agents. I assume it's a business
+decision (revenue on its runtime, enterprise guardrails, focus), so I kept Lyzr as the default and
+made other frameworks an export. The full reasoning is in `SUBMISSION.md` in the repo.
 
 Real vs simulated, to be upfront: sign-in, database, multi-model chat, planning and building, live
 preview, Cognis memory and GitHub push are real. Agent runs in other frameworks, the E2B sandbox and
