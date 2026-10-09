@@ -13,7 +13,8 @@ export function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      aria-label={`Switch to ${next} mode`}
+      // A fixed label: the resolved theme isn't known on the server, so a dynamic one would mismatch.
+      aria-label="Toggle light and dark mode"
       onClick={() => setTheme(next)}
     >
       {/* Both icons render; CSS picks one so there's no hydration mismatch. */}

@@ -76,8 +76,8 @@
   --accent: oklch(0.91 0.016 90);
   --accent-foreground: var(--ink);
   --destructive: oklch(0.56 0.2 31.49);
-  --border: oklch(0.225 0.013 188.03 / 14%);
-  --input: oklch(0.225 0.013 188.03 / 20%);
+  --border: oklch(0.225 0.013 188.03 / 22%);
+  --input: oklch(0.225 0.013 188.03 / 26%);
   --ring: var(--blue);
   --chart-1: var(--blue);
   --chart-2: var(--yellow);
@@ -93,7 +93,7 @@
   --sidebar-accent-foreground: var(--ink);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--blue);
-  --texture: oklch(0.225 0.013 188.03 / 2.5%);
+  --texture: oklch(0.225 0.013 188.03 / 4.5%);
 }
 
 .dark {
@@ -113,8 +113,8 @@
   --accent: oklch(0.3 0.014 188.03);
   --accent-foreground: var(--paper);
   --destructive: var(--red);
-  --border: oklch(0.8946 0.0155 90.24 / 14%);
-  --input: oklch(0.8946 0.0155 90.24 / 18%);
+  --border: oklch(0.8946 0.0155 90.24 / 22%);
+  --input: oklch(0.8946 0.0155 90.24 / 26%);
   --ring: var(--blue);
   --sidebar: oklch(0.245 0.013 188.03);
   --sidebar-foreground: var(--paper);
@@ -122,9 +122,9 @@
   --sidebar-primary-foreground: oklch(0.985 0.005 90);
   --sidebar-accent: oklch(0.3 0.014 188.03);
   --sidebar-accent-foreground: var(--paper);
-  --sidebar-border: oklch(0.8946 0.0155 90.24 / 14%);
+  --sidebar-border: oklch(0.8946 0.0155 90.24 / 22%);
   --sidebar-ring: var(--blue);
-  --texture: oklch(0.8946 0.0155 90.24 / 1.8%);
+  --texture: oklch(0.8946 0.0155 90.24 / 3.5%);
 }
 
 @layer base {
@@ -184,5 +184,76 @@
   }
   to {
     transform: translateX(-50%);
+  }
+}
+
+/* ── Landing motion ─────────────────────────────────────────────────────────────────────────── */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes word-in {
+  from {
+    opacity: 0;
+    transform: translateY(70%);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes caret {
+  50% {
+    opacity: 0;
+  }
+}
+@keyframes float {
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+/* Scroll reveal (see app/_landing/reveal.tsx). */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal[data-shown="true"] {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
