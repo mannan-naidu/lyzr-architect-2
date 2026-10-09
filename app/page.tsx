@@ -22,6 +22,8 @@ const TICKER = [
   "Compiled 1 agent spec to LangGraph, CrewAI and Lyzr",
   "Fix reused: same cause, same place",
   "Pushed 14 files to GitHub in one commit",
+  "Imported 3 posts from WordPress",
+  "FAQ published · structured data updated",
 ];
 
 const PROBLEMS = [
@@ -36,7 +38,7 @@ const LOOP: LoopStep[] = [
   { n: "02", label: "Plan", body: "Screens, agents and decisions, with one-click answers to its questions. Approve or tweak." },
   { n: "03", label: "Build", body: "Watch the UI stream in file by file, in a live preview." },
   { n: "04", label: "Fix", body: "Errors are diagnosed first; past fixes are reused only when the cause matches." },
-  { n: "05", label: "Ship", body: "Security check, SEO + GEO report, deploy, and your code in your own GitHub repo." },
+  { n: "05", label: "Ship", body: "Security check, SEO + GEO report, deploy, and your code in your own GitHub repo. Then edit content without code." },
 ];
 
 const CATEGORIES = [
@@ -120,8 +122,9 @@ export default function Home() {
               </span>
             </p>
             <p className="mt-6 max-w-2xl animate-[fade-up_0.8s_cubic-bezier(0.2,0.7,0.2,1)_both] text-lg text-white/80 [animation-delay:300ms]">
-              Describe it and Architect plans, builds and ships it: SEO + GEO built in, a memory that
-              learns how you build, and agents in Lyzr, LangGraph, CrewAI or OpenAI Agents.
+              Describe it and Architect plans, builds and ships it: SEO + GEO built in, a content
+              editor anyone can use, a memory that learns how you build, and agents in Lyzr,
+              LangGraph, CrewAI or OpenAI Agents.
             </p>
 
             {/* GET → /dashboard?prompt=… ; proxy.ts sends signed-out users through /login first. */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon, PencilIcon, RotateCcwIcon, SearchIcon, SparklesIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, DownloadIcon, LoaderIcon, PencilIcon, RotateCcwIcon, SearchIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const PILLARS = [
   { id: "found", n: "01", title: "Get found", body: "SEO + GEO from the first build: real HTML, structured data and llms.txt, so Google ranks it and AI answer engines quote it." },
   { id: "remember", n: "02", title: "Remember", body: "Lyzr Cognis memory learns how you build across projects. See it, edit it, delete it." },
   { id: "agents", n: "03", title: "Run any agent", body: "One agent spec compiles to Lyzr, LangGraph, CrewAI, OpenAI Agents or TypeScript. Memory is one switch." },
+  { id: "content", n: "04", title: "Edit without code", body: "A WordPress-style content editor for pages, posts and FAQs, with one-click WordPress import. FAQs become structured data AI engines quote." },
 ] as const;
 
 type PillarId = (typeof PILLARS)[number]["id"];
@@ -78,7 +79,15 @@ export function Pillars({ frameworks }: { frameworks: FrameworkCode[] }) {
       </div>
 
       <div role="tabpanel" className="min-h-[420px] p-6 sm:p-8" key={active}>
-        {active === "found" ? <FoundDemo /> : active === "remember" ? <RememberDemo /> : <AgentsDemo frameworks={frameworks} />}
+        {active === "found" ? (
+          <FoundDemo />
+        ) : active === "remember" ? (
+          <RememberDemo />
+        ) : active === "agents" ? (
+          <AgentsDemo frameworks={frameworks} />
+        ) : (
+          <ContentDemo />
+        )}
       </div>
     </div>
   );
@@ -279,6 +288,134 @@ function AgentsDemo({ frameworks }: { frameworks: FrameworkCode[] }) {
         </pre>
       </div>
       <p className="text-xs text-muted-foreground">Real output of Architect&rsquo;s compiler for a one-agent yoga studio app.</p>
+    </div>
+  );
+}
+
+/* ── Edit without code (CMS) ───────────────────────────────────────────────────────────────── */
+
+type Collection = "pages" | "posts" | "faqs";
+type Faq = { id: number; q: string; a: string; published: boolean };
+
+const START_FAQS: Faq[] = [
+  { id: 1, q: "Is the first class free?", a: "Yes, your first session at Yoga Flow is free.", published: true },
+  { id: 2, q: "Do I need my own mat?", a: "No, mats and blocks are provided.", published: true },
+  { id: 3, q: "Are there evening classes?", a: "Yes, Monday to Friday at 7pm.", published: false },
+];
+const PAGES = ["Home", "Classes", "Pricing", "Contact"];
+const START_POSTS = ["5 poses for desk workers"];
+const WORDPRESS_POSTS = ["Breathing for better sleep", "What to bring to your first class", "Our new teacher: meet Asha"];
+
+function ContentDemo() {
+  const [tab, setTab] = useState<Collection>("faqs");
+  const [faqs, setFaqs] = useState(START_FAQS);
+  const [posts, setPosts] = useState(START_POSTS);
+  const [importing, setImporting] = useState(false);
+
+  const update = (id: number, patch: Partial<Faq>) => setFaqs((all) => all.map((f) => (f.id === id ? { ...f, ...patch } : f)));
+
+  const importWordPress = () => {
+    setImporting(true);
+    window.setTimeout(() => {
+      setPosts((p) => [...p, ...WORDPRESS_POSTS.filter((w) => !p.includes(w))]);
+      setImporting(false);
+      setTab("posts");
+    }, 1100);
+  };
+
+  const published = faqs.filter((f) => f.published && f.q.trim());
+  const jsonLd = {
+    "@type": "FAQPage",
+    mainEntity: published.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+  };
+  const counts: Record<Collection, number> = { pages: PAGES.length, posts: posts.length, faqs: faqs.length };
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {(["pages", "posts", "faqs"] as const).map((c) => (
+          <button
+            key={c}
+            onClick={() => setTab(c)}
+            className={cn(
+              "label-mono border px-2.5 py-1.5 transition-colors",
+              c === tab ? "border-primary bg-primary text-primary-foreground" : "hover:border-foreground/40",
+            )}
+          >
+            {c} · {counts[c]}
+          </button>
+        ))}
+        <button
+          onClick={importWordPress}
+          disabled={importing || posts.length > START_POSTS.length}
+          className="label-mono ml-auto flex items-center gap-1.5 border px-2.5 py-1.5 transition-colors hover:border-foreground/40 disabled:opacity-50"
+        >
+          {importing ? <LoaderIcon className="size-3 animate-spin" /> : <DownloadIcon className="size-3" />}
+          {posts.length > START_POSTS.length ? "Imported from WordPress" : "Import from WordPress"}
+        </button>
+      </div>
+
+      {tab === "faqs" ? (
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
+          <ul className="space-y-2">
+            {faqs.map((f, i) => (
+              <li key={f.id} className="animate-[pop-in_0.4s_ease_both] space-y-1.5 border bg-card p-3" style={{ animationDelay: `${i * 90}ms` }}>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={f.q}
+                    onChange={(e) => update(f.id, { q: e.target.value })}
+                    aria-label="Question"
+                    className="min-w-0 flex-1 border-b border-transparent bg-transparent text-sm font-medium outline-none focus:border-primary"
+                  />
+                  <button
+                    role="switch"
+                    aria-checked={f.published}
+                    aria-label="Published"
+                    onClick={() => update(f.id, { published: !f.published })}
+                    className={cn(
+                      "label-mono shrink-0 border px-1.5 py-0.5 text-[10px] transition-colors",
+                      f.published ? "border-[var(--green)] text-[var(--green)]" : "text-muted-foreground",
+                    )}
+                  >
+                    {f.published ? "Published" : "Draft"}
+                  </button>
+                </div>
+                <input
+                  value={f.a}
+                  onChange={(e) => update(f.id, { a: e.target.value })}
+                  aria-label="Answer"
+                  className="w-full border-b border-transparent bg-transparent text-xs text-muted-foreground outline-none focus:border-primary"
+                />
+              </li>
+            ))}
+          </ul>
+          <div className="border bg-[var(--ink)] text-[var(--paper)]">
+            <div className="border-b border-white/10 px-3 py-2">
+              <span className="label-mono text-white/60">JSON-LD · updates as you type</span>
+            </div>
+            <pre className="max-h-64 overflow-auto p-3 font-mono text-[10.5px] leading-relaxed">{JSON.stringify(jsonLd, null, 2)}</pre>
+          </div>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {(tab === "pages" ? PAGES : posts).map((title, i) => (
+            <li
+              key={title}
+              className="flex animate-[pop-in_0.4s_ease_both] items-center justify-between gap-3 border bg-card p-3 text-sm"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              {title}
+              <span className="label-mono shrink-0 text-muted-foreground">
+                {tab === "posts" && WORDPRESS_POSTS.includes(title) ? "from WordPress" : "published"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="text-xs text-muted-foreground">
+        Try it: edit an FAQ or publish a draft. In Architect, published FAQs feed the site&rsquo;s structured data and
+        llms.txt on every deploy.
+      </p>
     </div>
   );
 }
