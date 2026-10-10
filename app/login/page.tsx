@@ -14,6 +14,16 @@ const POINTS = [
   { icon: BotIcon, text: "Agents in Lyzr, LangGraph, CrewAI, OpenAI Agents or TypeScript" },
 ];
 
+/** Plain-language versions of the sign-in errors people actually hit. */
+function friendlyError(raw: string): string {
+  if (/code verifier/i.test(raw)) {
+    return "That sign-in link was started in another browser, tab or device, or has already been used. Click a sign-in button below to start again here.";
+  }
+  if (/redirect_uri_mismatch/i.test(raw)) return "This sign-in provider isn't set up for this site yet. Try another option or the demo.";
+  if (/access_denied/i.test(raw)) return "Sign-in was cancelled. Try again when you're ready.";
+  return `Sign-in failed: ${raw}`;
+}
+
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const params = await searchParams;
   const next = safeNextPath(typeof params.next === "string" ? params.next : null);
@@ -77,7 +87,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
           {error ? (
             <p role="alert" className="border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-              Sign-in failed: {error}
+              {friendlyError(error)}
             </p>
           ) : null}
 
