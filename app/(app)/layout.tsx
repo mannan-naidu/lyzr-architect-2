@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 
@@ -5,6 +6,7 @@ import { CommandPalette } from "@/components/command-palette";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/user-menu";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
@@ -33,9 +35,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <div className="flex items-center gap-2">
           <CommandPalette projects={projects ?? []} />
           <ThemeToggle />
+          {user.isAnonymous ? (
+            <Button asChild size="sm" variant="outline" className="hidden sm:inline-flex">
+              <Link href="/login">Sign in to keep your work</Link>
+            </Button>
+          ) : null}
           <UserMenu
             username={profile?.username ?? user.email ?? (user.isAnonymous ? "Guest" : "You")}
             avatarUrl={profile?.avatar_url ?? null}
+            isGuest={user.isAnonymous}
           />
         </div>
       </header>

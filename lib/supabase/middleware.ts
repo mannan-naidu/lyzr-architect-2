@@ -47,6 +47,8 @@ export async function updateSession(request: NextRequest) {
   // Don't run code between createServerClient and getClaims(): it refreshes the session.
   const { data } = await supabase.auth.getClaims();
   const isSignedIn = Boolean(data?.claims?.sub);
+  // Guests (anonymous demo users) may open /login to sign in with a real account.
+  const isGuest = data?.claims?.is_anonymous === true;
   const { pathname, search } = request.nextUrl;
 
   const redirectTo = (path: string, params?: Record<string, string>) => {
@@ -62,7 +64,7 @@ export async function updateSession(request: NextRequest) {
   if (!isSignedIn && matches(pathname, PROTECTED_PREFIXES)) {
     return redirectTo("/login", { next: `${pathname}${search}` });
   }
-  if (isSignedIn && matches(pathname, AUTH_PAGES)) {
+  if (isSignedIn && !isGuest && matches(pathname, AUTH_PAGES)) {
     return redirectTo("/dashboard");
   }
 

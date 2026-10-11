@@ -1,6 +1,6 @@
 "use client";
 
-import { LayoutGridIcon, LogOutIcon } from "lucide-react";
+import { LayoutGridIcon, LogInIcon, LogOutIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -14,7 +14,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function UserMenu({ username, avatarUrl }: { username: string; avatarUrl: string | null }) {
+export function UserMenu({
+  username,
+  avatarUrl,
+  isGuest = false,
+}: {
+  username: string;
+  avatarUrl: string | null;
+  isGuest?: boolean;
+}) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -35,6 +43,24 @@ export function UserMenu({ username, avatarUrl }: { username: string; avatarUrl:
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        {isGuest ? (
+          <DropdownMenuItem asChild>
+            <Link href="/login">
+              <LogInIcon />
+              Sign in with GitHub or Google
+            </Link>
+          </DropdownMenuItem>
+        ) : (
+          // Signs out, then the login page asks GitHub/Google which account to use.
+          <form action="/auth/signout" method="post">
+            <DropdownMenuItem asChild>
+              <button type="submit" className="w-full">
+                <UsersIcon />
+                Switch account
+              </button>
+            </DropdownMenuItem>
+          </form>
+        )}
         {/* Sign-out is a POST so it can't be triggered by a prefetch or a stray link. */}
         <form action="/auth/signout" method="post">
           <DropdownMenuItem asChild>

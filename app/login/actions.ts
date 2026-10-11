@@ -33,6 +33,9 @@ export async function signInWithProvider(formData: FormData) {
     options: {
       redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
       scopes: PROVIDER_SCOPES[provider],
+      // Always show the provider's account picker, so people can sign in with a different
+      // GitHub or Google account than the one their browser is already signed in to.
+      queryParams: { prompt: "select_account" },
     },
   });
 
