@@ -17,6 +17,7 @@ export type WorkspaceData = {
     memory_enabled: boolean;
     seo_enabled: boolean;
     cms_enabled: boolean;
+    agents_enabled: boolean;
     github_repo: string | null;
     deploy_slug: string | null;
   };

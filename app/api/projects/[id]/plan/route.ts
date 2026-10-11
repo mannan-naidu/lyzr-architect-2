@@ -2,7 +2,7 @@ import { generateText, Output } from "ai";
 import { z } from "zod";
 
 import { ModelUnavailableError, resolveModel } from "@/lib/ai/registry.server";
-import { checkTokenCap, jsonError, requireProject } from "@/lib/build/guard.server";
+import { checkTokenCap, jsonError, readAgentsEnabled, requireProject } from "@/lib/build/guard.server";
 import { PLANNER_INSTRUCTIONS } from "@/lib/build/prompts";
 import { planOutputSchema } from "@/lib/build/schemas";
 import { logEvent, recordUsage } from "@/lib/build/store.server";
@@ -57,17 +57,26 @@ export async function POST(request: Request, ctx: RouteContext<"/api/projects/[i
     }
   }
 
+  const agentsEnabled = await readAgentsEnabled(supabase, id);
   const previous = parsed.data.prompt && project.plan ? `Current plan (revise it):\n${JSON.stringify(project.plan)}` : "";
 
   try {
     const result = await generateText({
       model: resolved.model,
       instructions: [PLANNER_INSTRUCTIONS, formatMemoryContext(recalled)].filter(Boolean).join("\n\n"),
-      prompt: [`Plan this app (framework for agents: ${project.framework}):\n${ask}`, previous].filter(Boolean).join("\n\n"),
+      prompt: [
+        agentsEnabled
+          ? `Plan this app (framework for agents, if it needs any: ${project.framework}):\n${ask}`
+          : `Plan this app. The user chose NO AI agents: it is a regular app, so return agents: [] and dataSources: [].\n${ask}`,
+        previous,
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
       output: Output.object({ schema: planOutputSchema }),
       maxOutputTokens: 6000,
     });
-    const plan = result.output;
+    // The user's "no AI agents" choice is a rule, not a hint: enforce it whatever the model returned.
+    const plan = agentsEnabled ? result.output : { ...result.output, agents: [], dataSources: [] };
     const inputTokens = result.totalUsage.inputTokens ?? 0;
     const outputTokens = result.totalUsage.outputTokens ?? 0;
 

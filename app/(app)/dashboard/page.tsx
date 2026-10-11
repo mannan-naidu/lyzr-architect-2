@@ -31,7 +31,7 @@ const STARTERS = [
   {
     name: "Designer portfolio",
     tag: "No AI · SEO + GEO",
-    options: "seo,cms",
+    options: "seo,cms,noagents",
     prompt: "A one-page portfolio for a product designer with case studies and a contact form.",
   },
 ];
@@ -56,7 +56,8 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
   const supabase = await createClient();
   const { data: projects, error } = await supabase
     .from("projects")
-    .select("id, name, description, framework, mode, memory_enabled, updated_at")
+    // "*" so the page also works on a database that hasn't added agents_enabled yet.
+    .select("*")
     .order("updated_at", { ascending: false });
 
   return (
@@ -74,6 +75,7 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
           initialName={name}
           initialSeo={options.includes("seo")}
           initialCms={options.includes("cms")}
+          initialAgents={options.includes("noagents") ? "none" : "auto"}
           defaultOpen={openNew}
         />
       </div>
@@ -134,7 +136,9 @@ export default async function DashboardPage({ searchParams }: PageProps<"/dashbo
                 className="group flex h-full flex-col gap-3 p-6 transition-colors hover:bg-card focus-visible:outline-2"
               >
                 <div className="flex items-center justify-between">
-                  <span className="label-mono text-primary">{FRAMEWORK_LABELS[project.framework]}</span>
+                  <span className="label-mono text-primary">
+                    {project.agents_enabled === false ? "No AI agents" : FRAMEWORK_LABELS[project.framework]}
+                  </span>
                   <span className="label-mono text-muted-foreground/60">{String(i + 1).padStart(3, "0")}</span>
                 </div>
                 <h2 className="truncate text-lg font-semibold group-hover:text-primary">{project.name}</h2>

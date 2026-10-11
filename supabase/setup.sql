@@ -430,3 +430,11 @@ create policy "deployments: project owner can delete" on public.deployments for 
 
 -- Let the API see new tables/columns immediately.
 notify pgrst, 'reload schema';
+
+-- ════════════════ 20261011000000_agents_choice.sql ════════════════
+-- Apps don't have to contain AI agents. agents_enabled = false means "a regular app": the planner
+-- returns no agents and the agent framework is ignored. true (default) means "add agents only if
+-- the app needs AI".
+alter table public.projects add column if not exists agents_enabled boolean not null default true;
+
+notify pgrst, 'reload schema';

@@ -22,13 +22,18 @@ import { createProject, type CreateProjectState } from "./actions";
 const SELECT_CLASS =
   "h-9 w-full rounded-md border border-input bg-transparent px-3 text-sm shadow-xs outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50 dark:bg-input/30";
 
+const AGENT_CHOICES = [
+  { value: "auto", label: "If it needs AI", help: "Architect adds agents only where the app needs AI." },
+  { value: "none", label: "No AI agents", help: "A regular app or website. Nothing to configure." },
+] as const;
+
 /** The three switches, as compact rows: short label + one line of help. */
 const OPTIONS: { name: string; icon: LucideIcon; label: string; help: string; defaultChecked?: boolean }[] = [
   {
     name: "memory_enabled",
     icon: BrainIcon,
     label: "Memory",
-    help: "Agents remember their users via Lyzr Cognis; you can view and delete it.",
+    help: "Architect remembers your choices in this project (Lyzr Cognis); view or delete them anytime.",
     defaultChecked: true,
   },
   {
@@ -50,15 +55,18 @@ export function NewProjectDialog({
   initialName,
   initialSeo = false,
   initialCms = false,
+  initialAgents = "auto",
   defaultOpen = false,
 }: {
   initialPrompt?: string;
   initialName?: string;
   initialSeo?: boolean;
   initialCms?: boolean;
+  initialAgents?: "auto" | "none";
   defaultOpen?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen);
+  const [agents, setAgents] = useState<"auto" | "none">(initialAgents);
   const [state, formAction, pending] = useActionState<CreateProjectState, FormData>(
     createProject,
     {},
@@ -78,7 +86,7 @@ export function NewProjectDialog({
           <div className="min-h-0 flex-1 space-y-4 overflow-y-auto p-5">
           <DialogHeader>
             <DialogTitle>New project</DialogTitle>
-            <DialogDescription>Name it, pick a framework, and decide if it should remember and be found.</DialogDescription>
+            <DialogDescription>Describe it, choose whether it needs AI agents, and whether it should be found.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-2">
@@ -114,18 +122,47 @@ export function NewProjectDialog({
             />
           </div>
 
-          <div className="space-y-2">
-            <label htmlFor="framework" className="text-sm font-medium">
-              Framework
-            </label>
-            <select id="framework" name="framework" defaultValue="lyzr" className={SELECT_CLASS}>
-              {AGENT_FRAMEWORKS.map((fw) => (
-                <option key={fw} value={fw}>
-                  {FRAMEWORK_LABELS[fw]}
-                </option>
+          <fieldset className="space-y-2">
+            <legend className="text-sm font-medium">AI agents</legend>
+            <div className="grid grid-cols-2 gap-2">
+              {AGENT_CHOICES.map((c) => (
+                <label
+                  key={c.value}
+                  className="cursor-pointer space-y-0.5 rounded-lg border p-3 transition-colors has-checked:border-primary has-checked:bg-primary/5 hover:bg-accent/40"
+                >
+                  <span className="flex items-center gap-2 text-sm font-medium">
+                    <input
+                      type="radio"
+                      name="agents"
+                      value={c.value}
+                      checked={agents === c.value}
+                      onChange={() => setAgents(c.value)}
+                      className="accent-primary"
+                    />
+                    {c.label}
+                  </span>
+                  <span className="block text-xs text-muted-foreground">{c.help}</span>
+                </label>
               ))}
-            </select>
-          </div>
+            </div>
+            {agents === "auto" ? (
+              <div className="flex items-center gap-2">
+                <label htmlFor="framework" className="shrink-0 text-xs text-muted-foreground">
+                  Agent framework
+                </label>
+                <select id="framework" name="framework" defaultValue="lyzr" className={SELECT_CLASS}>
+                  {AGENT_FRAMEWORKS.map((fw) => (
+                    <option key={fw} value={fw}>
+                      {FRAMEWORK_LABELS[fw]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              // The column is required; with no agents the framework is never used.
+              <input type="hidden" name="framework" value="lyzr" />
+            )}
+          </fieldset>
 
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium">Options</legend>

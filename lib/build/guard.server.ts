@@ -70,3 +70,16 @@ export async function checkTokenCap(
   const hint = user.isAnonymous ? " Sign in for a higher limit." : " Try again tomorrow.";
   return jsonError(429, `Daily limit reached (${cap.toLocaleString()} tokens).${hint}`, "token_cap");
 }
+
+/**
+ * Whether the project may have AI agents. Read on its own so a database that hasn't run the
+ * 2026-10-11 migration yet (no agents_enabled column) keeps working: missing means "allowed".
+ */
+export async function readAgentsEnabled(
+  supabase: Supabase,
+  projectId: string,
+): Promise<boolean> {
+  const { data, error } = await supabase.from("projects").select("agents_enabled").eq("id", projectId).maybeSingle();
+  if (error || !data) return true;
+  return data.agents_enabled !== false;
+}

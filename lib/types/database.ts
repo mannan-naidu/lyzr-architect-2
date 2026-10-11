@@ -41,6 +41,8 @@ export type Project = {
   plan_status: PlanStatus;
   seo_enabled: boolean;
   cms_enabled: boolean;
+  /** false = a regular app with no AI agents (added 2026-10-11; treat a missing column as true). */
+  agents_enabled?: boolean;
   deploy_slug: string | null;
   created_at: string;
   updated_at: string;

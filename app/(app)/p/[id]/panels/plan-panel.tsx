@@ -10,6 +10,7 @@ import type { Plan } from "@/lib/build/schemas";
 
 import { approvePlan } from "../actions";
 import { readApiError, useWorkspace } from "../workspace-context";
+import { AgentsSwitch } from "./agents-switch";
 import { SeoSwitch } from "./seo-switch";
 import { useBuild } from "./use-build";
 
@@ -67,7 +68,8 @@ export function PlanPanel() {
           <span className="label-mono block text-muted-foreground">Your idea</span>
           {project.description ?? "Describe your app in the chat, or add a description to the project."}
         </div>
-        <div className="w-full">
+        <div className="w-full space-y-2">
+          <AgentsSwitch />
           <SeoSwitch />
         </div>
         <Button onClick={() => void generate()} disabled={pending || !project.description}>
@@ -99,7 +101,10 @@ export function PlanPanel() {
         )}
       </div>
 
-      <SeoSwitch />
+      <div className="space-y-2">
+        <AgentsSwitch />
+        <SeoSwitch />
+      </div>
 
       {recalled.length ? (
         <div className="flex items-start gap-2 border border-primary/30 bg-primary/5 p-3 text-sm">
@@ -141,7 +146,9 @@ export function PlanPanel() {
         <span className="label-mono text-muted-foreground">Agents</span>
         {plan.agents.length === 0 ? (
           <p className="border border-dashed p-4 text-sm text-muted-foreground">
-            No AI agents: this is a regular app. Ask for one under &ldquo;Change something&rdquo; if it needs AI.
+            {project.agents_enabled
+              ? "No AI agents: this is a regular app. Ask for one under “Change something” if it needs AI."
+              : "No AI agents, as you chose. Switch on “AI agents” above and revise the plan to add some."}
           </p>
         ) : (
         <div className="grid gap-px border bg-border sm:grid-cols-2">

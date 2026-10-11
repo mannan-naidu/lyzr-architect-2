@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { z } from "zod";
 
 import { availableProviders } from "@/lib/ai/registry.server";
+import { readAgentsEnabled } from "@/lib/build/guard.server";
 import { planSchema } from "@/lib/build/schemas";
 import type { ArchitectUIMessage } from "@/lib/chat/types";
 import { createClient } from "@/lib/supabase/server";
@@ -76,6 +77,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       memory_enabled: project.memory_enabled,
       seo_enabled: project.seo_enabled,
       cms_enabled: project.cms_enabled,
+      agents_enabled: await readAgentsEnabled(supabase, project.id),
       github_repo: project.github_repo,
       deploy_slug: project.deploy_slug,
     },

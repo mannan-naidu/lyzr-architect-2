@@ -79,6 +79,7 @@ export async function setProjectFlags(input: {
   memory_enabled?: boolean;
   seo_enabled?: boolean;
   cms_enabled?: boolean;
+  agents_enabled?: boolean;
 }) {
   const { projectId, ...flags } = z
     .object({
@@ -86,6 +87,7 @@ export async function setProjectFlags(input: {
       memory_enabled: z.boolean().optional(),
       seo_enabled: z.boolean().optional(),
       cms_enabled: z.boolean().optional(),
+      agents_enabled: z.boolean().optional(),
     })
     .parse(input);
   const supabase = await createClient();
