@@ -29,7 +29,7 @@ const TICKER = [
 const PROBLEMS = [
   { tag: "Invisible", title: "Built, but never found", body: "Most generated apps are blank JavaScript shells. Google and AI answer engines see nothing to rank or quote." },
   { tag: "Forgetful", title: "Every project starts cold", body: "Your stack, style and past decisions vanish between sessions. You re-explain everything." },
-  { tag: "Locked in", title: "Screens, not agents", body: "App builders give you UI without real agents; agent platforms give you agents without the app." },
+  { tag: "Locked in", title: "Agents tied to one platform", body: "App builders now add simple agents, but they live inside that builder. Agent platforms give you agents without the app." },
   { tag: "Loops", title: "It repeats failed fixes", body: "Agents forget what they tried, so the same bug burns credits again, and you pay for it." },
 ];
 
@@ -42,8 +42,8 @@ const LOOP: LoopStep[] = [
 ];
 
 const CATEGORIES = [
-  { name: "App builders", who: "Lovable, Replit, Bolt", gives: "An app, but no real agents" },
-  { name: "Agent platforms", who: "Lyzr Studio, n8n", gives: "Agents, but no app" },
+  { name: "App builders", who: "Lovable, Replit, Bolt", gives: "An app, with agents tied to their platform" },
+  { name: "Agent platforms", who: "Lyzr Studio, n8n", gives: "Agents, but not the app around them" },
   { name: "Coding tools", who: "Cursor, Claude Code", gives: "Control, if you're a developer" },
 ];
 
@@ -218,7 +218,7 @@ export default function Home() {
           <Reveal delay={300} className="mx-auto max-w-4xl">
             <div className="border border-t-0 border-primary/60 bg-primary/10 p-5 text-center">
               <span className="label-mono text-primary">Architect 2.0</span>
-              <p className="mt-1 text-lg font-semibold">The app, real agents, and the code underneath, in one project.</p>
+              <p className="mt-1 text-lg font-semibold">The app, portable agents, and the code underneath, in one project.</p>
             </div>
           </Reveal>
         </section>

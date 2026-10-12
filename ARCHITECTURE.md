@@ -73,9 +73,11 @@ Builder memory runs on Lyzr Cognis (open source), and you can switch memory on f
 production). Everything else follows the familiar vibe-coding flow (prompt → plan → build →
 preview → deploy), so there's nothing new to learn.
 
-**Where it sits in the market.** The space is crowded: app builders (Lovable, Replit, Bolt, v0,
-Emergent) give you an app but no real agents; agent platforms (Lyzr Studio, n8n, Relevance AI) give
-you agents but no app; coding tools (Cursor, Claude Code, Codex) assume you're a developer.
+**Where it sits in the market.** The space is crowded. App builders (Lovable, Replit, Bolt, v0,
+Emergent) are app-first: they can now add AI features and simple agents (Lovable's AI gateway,
+Replit's Agents & Automations), but those agents live inside their own platform and runtime.
+Agent platforms (Lyzr Studio, n8n, Relevance AI) are agent-first and don't build the app around
+them. Coding tools (Cursor, Claude Code, Codex) assume you're a developer.
 Architect 2.0 is designed for the intersection, so the architecture has to serve a non-technical
 user (Simple mode, guided plan, no setup) and a developer (Pro mode, real code, GitHub, any
 framework) on the *same* project.

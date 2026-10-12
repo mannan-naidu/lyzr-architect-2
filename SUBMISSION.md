@@ -114,15 +114,16 @@ needs one clear position:
 
 | Category | Examples | Who drives | What you get | Where it runs |
 | --- | --- | --- | --- | --- |
-| **AI app builders** | Lovable, Replit, Bolt, v0, Emergent | Anyone, in the browser, by prompting | A whole hosted app; you rarely read the code | Their cloud, one click |
+| **AI app builders** | Lovable, Replit, Bolt, v0, Emergent | Anyone, in the browser, by prompting | A whole hosted app; AI features and simple agents (Lovable's AI gateway, Replit's Agents & Automations) that live inside their platform | Their cloud, one click |
 | **AI coding tools** | Cursor, Trae, Windsurf, Claude Code, Codex, Copilot | Developers, in their own repo | Code changes inside an IDE or terminal | Your machine; you own build, deploy and infra |
 | **Agent builders** | Lyzr Studio, n8n, Relevance AI, OpenAI AgentKit | Ops and technical teams | Agents and workflows, not a full app | The vendor's runtime |
 | **Architect 2.0** | — | Business users, with developers in Pro mode | An **agentic app**: a UI plus agents, ready for production | Lyzr runtime by default; exportable |
 
 **Our position:** *the app builder for production AI apps*. Architect builds apps that get found
 (SEO + GEO), that remember (Cognis), and whose agents run on Lyzr or any framework, backed by an
-enterprise agent company. App builders stop at a hosted prototype. Coding tools assume you're a
-developer. Agent builders don't give you an app. Architect covers all three.
+enterprise agent company. App builders are app-first, and their agents are tied to their own
+platform. Coding tools assume you're a developer. Agent builders don't build the app around the
+agents. Architect covers all three.
 
 ---
 
@@ -198,8 +199,10 @@ The form's project fields, in its order:
 App builders are a crowded space, and the big ones like Lovable and Replit are great at getting
 you to a demo that runs. The hard part comes after that: getting people to actually find what you
 built, not having to re-explain yourself every time, and adding AI that does something useful.
-App builders give you an app without real agents, and agent tools give you agents without an app.
-Architect 2.0 is built for the space in between, on top of Lyzr's agent platform.
+Some of them can add AI features or simple agents now, but those agents live inside their
+platform. Architect treats agents as a core part of the plan, lets each one remember its users, and
+runs them on Lyzr's enterprise agent platform, or exports them to LangGraph, CrewAI or the OpenAI
+SDK. It's built for the space between app builders and agent platforms.
 
 When you start a project, you tick one box if it's a public website, and Architect builds it so
 Google and AI assistants like ChatGPT and Perplexity can read it and quote it. You don't need to
@@ -232,8 +235,9 @@ signing up.
 I wouldn't pitch Architect as a better code editor than Claude Code, Cursor or Codex. They're
 excellent at working inside a repo you already own, and in a market this crowded nobody wins on
 "best code generator", because everyone uses the same models. Architect is for the layer around the
-code that those tools leave to you: a business user can start the app, and you get real agents,
-memory and the code underneath, in one project.
+code that those tools leave to you: a business user can start the app, and you get portable agents,
+memory and the code underneath, in one project. App builders like Lovable and Replit can add
+agents too now, but those agents are tied to their platform; here each agent is one spec you can take anywhere.
 
 First, agents. You describe an agent once and Architect compiles it to Lyzr, LangGraph, CrewAI,
 the OpenAI Agents SDK or plain TypeScript, all behind the same API, so switching frameworks isn't a
