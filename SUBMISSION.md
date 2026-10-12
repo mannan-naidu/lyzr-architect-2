@@ -194,163 +194,128 @@ The form's project fields, in its order:
 
 ### Why would a non-technical user pick your platform? (vs Replit, Lovable, Emergent)
 
-App builders are a crowded space, and Lovable, Replit and Emergent are good at getting an app to
-"it runs". Architect sits where three kinds of tools meet: the ease of an app builder, the agents
-of an agent platform (Lyzr), and the control of a developer tool when you need it. It takes you from
-prompt to production, with AI apps that get found, remember, and run any agent.
+Most AI app builders are great at getting you to a demo that runs. The hard part comes after
+that: getting people to actually find what you built, not having to re-explain yourself every
+time, and adding AI that does something useful. That's the gap I built Architect 2.0 for.
 
-1. **Get found.** Switch on SEO + GEO when you start a project. Architect builds the site
-   HTML-first and adds meta tags, a sitemap, structured data and `llms.txt`, so Google can rank it
-   and ChatGPT, Perplexity and Claude can quote it. Ship gives you a plain-English score. You edit
-   pages and FAQs in a content editor (or import them from WordPress), no code needed.
-2. **It remembers you.** Architect learns how you build (look and feel, where you deploy, what you
-   already decided) across all your projects, using Lyzr Cognis. Your tenth app takes a sentence,
-   not a page. Every reply shows what it remembered, and you can edit or delete any of it.
-3. **Agents when you need them.** If your app needs AI (a support bot, a lead qualifier),
-   Architect designs the agents and gives each a one-click memory switch. If it doesn't, you get a
-   regular app.
-4. **Fixes you can trust.** When something breaks, Architect works out *why* before reusing an old
-   fix and never repeats one that failed. After three tries it rolls back to your last working
-   version and asks you one plain question. Its own fixes don't use your credits, and a ledger
-   shows exactly what you paid for.
-5. **Search that takes you there.** Type "undo" or "how much am I paying" and ⌘K opens that
-   feature.
+When you start a project, you tick one box if it's a public website, and Architect builds it so
+Google and AI assistants like ChatGPT and Perplexity can read it and quote it. You don't need to
+know anything about SEO. You can edit pages and FAQs yourself in a simple content editor, or pull
+them in from WordPress.
 
-Nothing to relearn: it's the same prompt → plan → preview → ship flow you know, with a 30-second
-tour on day one, plus the usual live preview, model choice and GitHub push.
+It also remembers you: your style, where you deploy, the decisions you've already made. It
+carries them into your next project, and you can see, edit or delete anything it remembers. So
+your tenth app takes a sentence, not a page.
+
+If your app needs AI, like a support assistant or a lead scorer, Architect adds the agents for
+you. If it doesn't, you just get a regular app.
+
+And when something breaks, it works out why before trying a fix, never repeats a fix that already
+failed, and after three tries it rolls back and asks you one simple question instead of burning
+your credits. Its own fixes aren't charged to you.
+
+None of this means learning something new. It's the same describe, plan, preview, ship flow you
+know from Lovable or Replit, with a short tour on day one.
 
 ### Why would a technical user pick your platform? (vs Claude Code, Codex, Cursor)
 
-Claude Code, Codex and Cursor are excellent at editing a repo you already have, and Architect
-doesn't try to beat them at that. Architect sits where app builders, agent platforms and coding
-tools meet: a business user can start the app, and you get the agents, the memory and the code
-underneath. It covers what sits around the code: agents in any framework, memory that spans
-projects, and production defaults.
+I wouldn't pitch Architect as a better code editor than Claude Code, Cursor or Codex. They're
+excellent at working inside a repo you already own. Architect is for the layer around the code
+that those tools leave to you.
 
-1. **Run any agent.** One agent spec compiles to Lyzr, LangGraph, CrewAI, OpenAI Agents SDK or
-   TypeScript behind one contract (`POST /agents/{name}/run`). The UI never depends on the
-   framework, so switching framework isn't a rewrite.
-2. **Memory as infrastructure, not a rules file.** Instead of a hand-maintained `CLAUDE.md` or
-   `.cursorrules` per repo, Architect runs Lyzr Cognis (open source, self-hosted on AWS): hybrid
-   vector + BM25 search, versioned facts (add / update / contradict), scoped user → agent →
-   project. Every reply shows which memories were recalled; you can edit, delete or forget a
-   project.
-3. **Fix memory that diagnoses.** Errors are fingerprinted by normalised message *and* location.
-   Past fixes are hints only: the model diagnoses first and reuses a fix only when the cause
-   matches, failed fixes are never retried in the same place, and a loop breaker rolls back after
-   3 attempts, across sessions.
-4. **Found by default.** Static-first build, pre-rendered HTML, JSON-LD, sitemap and `llms.txt`,
-   with an SEO/GEO audit run on the HTML crawlers actually receive.
-5. **Auditable.** Pro mode shows diffs, logs, a per-run trace, token counts and a ledger that
-   separates your prompts from the agent's self-fixes.
+First, agents. You describe an agent once and Architect compiles it to Lyzr, LangGraph, CrewAI,
+the OpenAI Agents SDK or plain TypeScript, all behind the same API, so switching frameworks isn't
+a rewrite.
 
-Also there: any model (Anthropic, OpenAI, Google, Groq, OpenRouter) behind one gateway,
-plan-before-build, a security pre-check and a one-commit GitHub push. The design adds E2B sandboxes
-and a CLI/MCP bridge so Claude Code or Cursor can drive the same project: Architect complements
-those tools rather than replacing them.
+Second, memory as infrastructure. Instead of a CLAUDE.md or .cursorrules file you maintain by hand
+for each repo, Architect runs Lyzr's open-source Cognis on AWS: hybrid vector and keyword search,
+versioned facts, scoped to you across every project. Every reply shows which memories it used, and
+you can edit or delete them.
+
+Third, a fix loop you can trust. Errors are fingerprinted by message and location, and past fixes
+are only hints: the model has to diagnose the cause before reusing one. A loop breaker rolls back
+after three failed attempts, across sessions, not just within one.
+
+Fourth, production defaults: static-first builds with JSON-LD, a sitemap and llms.txt for SEO and
+GEO, a security check before deploy, and the code pushed to your own GitHub repo. Pro mode gives
+you diffs, logs, a run trace and a ledger of every token.
+
+It's model-agnostic too (Anthropic, OpenAI, Google, Groq, OpenRouter). The way I see it,
+Architect sits next to Claude Code, not instead of it. The design includes an MCP bridge so you
+can drive the same project from your editor.
 
 ### Any other comments? (optional)
 
-How I read the opportunity: Lyzr builds production agents inside clients' environments, Agent
-Studio lets teams build their own, and Architect is the vibe-coding front door to both, for
-business users and consultants who need a working app and not just a demo.
+A bit about how I approached this. Lyzr builds production agents inside its clients'
+environments, Agent Studio lets teams build their own, and Architect is the front door that turns
+an idea into a working app on top of that. So I treated it as a product question first: who is
+this for, and why would they pick it in a market where Lovable, Replit, Cursor and the model
+companies are all shipping builders?
 
-This is a crowded space with giants: Lovable and Replit build apps, Cursor and Claude Code serve
-developers, and the model companies ship their own builders. Architect can't win on "best code
-generator", because everyone uses the same models. It has to win on a clear position, and the
-open spot is the intersection: app builders (Lovable, Replit) give you an app but no real agents,
-agent platforms (Lyzr Studio, n8n) give you agents but no app, and coding tools (Cursor, Claude
-Code) assume you're a developer. Architect is all three in one project: production AI apps, backed
-by an enterprise agent company. So I built Architect 2.0 around three gaps between
-a prototype and production: being found (SEO + GEO), memory (Lyzr's own open-source Cognis,
-self-hosted on AWS), and agents in any framework, with Lyzr as the default.
+My answer is the intersection. App builders give you an app without real agents, agent platforms
+give you agents without an app, and coding tools assume you're a developer. Architect 2.0 tries
+to be all three in one project, with three things that close the gap between a prototype and
+production: getting found (SEO + GEO), memory (Lyzr's own Cognis, self-hosted on AWS), and agents
+in any framework.
 
-I don't know why Lyzr currently limits Architect to Lyzr agents. I assume it's a business
-decision (revenue on its runtime, enterprise guardrails, focus), so I kept Lyzr as the default and
-made other frameworks an export. The full reasoning is in `SUBMISSION.md` in the repo.
+One thing I couldn't find an answer to is why Architect currently builds only Lyzr agents. I'm
+assuming it's a business decision (revenue on the runtime, guardrails Lyzr can guarantee, focus),
+so I kept Lyzr as the default and made the other frameworks an export.
 
-What's live and what's a placeholder for now: sign-in, database, multi-model chat, planning and
-building, live preview, SEO + GEO files, the CMS, Cognis memory and GitHub push are live. Agent runs,
-the E2B sandbox and hosting of user apps are placeholders for now, as the brief allows, and each
-has its production design in `ARCHITECTURE.md`. `ARCHITECTURE.md` §12 explains why
-Architect runs on Vercel but memory runs on AWS.
+To be upfront about what's live: sign-in, the database, multi-model chat, planning and building,
+the live preview, SEO + GEO files, the content editor, Cognis memory and GitHub push all work.
+Agent runs, hosting of user apps and most connectors are placeholders for now, and ARCHITECTURE.md
+describes how each would work in production.
 
 ---
 
-## Loom script (under 5 minutes)
+## Loom script (about 5 minutes)
 
-Two parts: a guest-mode project first (no account), then a signed-in walkthrough of the features.
-Spoken lines are in quotes; what to show is in brackets. "Feature search" is opened with ⌘K
-(say "Command K"; on Windows it's Ctrl K).
+### Before you record (10 minutes)
 
-**Before recording**
-- Guest tab: your small guest project open on Preview, with the **Demo mode** badge visible.
-- Signed-in prep, done earlier with **GitHub** (needed for the push): build one quick project and
-  state preferences in chat (e.g. "I always want a dark theme and a minimal style"). Memory then
-  has something to recall in the new project you'll create on camera.
-- Second tab: the architecture diagram (`docs/architecture/architecture.png`).
+1. **Memory prep.** Sign in at https://lyzr-architect-2o.vercel.app with **GitHub**, create any
+   quick project, and say in chat: *"I always want a dark theme and a minimal, clean style."*
+   Wait a minute, then sign out. Memory now has something to recall on camera.
+2. **Guest tab.** Open your small guest project on **Preview**, with the **Demo mode** badge
+   visible.
+3. **Second tab.** `docs/architecture/architecture.png`.
+4. **Settings.** Model: Groq GPT-OSS 120B (fastest). Browser zoom 110–125%, other tabs closed,
+   Do Not Disturb on. Loom: Screen + Camera, **Window** mode, camera bubble bottom-right.
+5. **Pick your break.** Decide which line you'll break for the fix demo (e.g. delete a closing `}`).
 
-### Part 1: guest mode (0:00–1:30)
+### Part 1: guest mode (0:00–1:20)
 
-**1. Hook (0:00–0:15)** [The guest project's live preview]
-"This is Architect 2.0: from prompt to production, AI apps that get found, remember, and run any
-agent. What you're looking at is guest mode: no account, a real project built by Architect."
+| Time | On screen | Say |
+| --- | --- | --- |
+| 0:00 | Guest project, Preview tab | "Hi, I'm Mannan. This is Architect 2.0: from prompt to production. It builds AI apps that get found, remember, and run any agent. What you're seeing is guest mode, so no account: this is a real project Architect built." |
+| 0:15 | Point to the Demo mode badge. Click Plan → Preview → Code. ⌘K → "Take the quick tour" (let two steps play) | "Anyone can try it without signing up. The flow is the one you already know from other tools: describe, plan, preview, ship. And there's a short tour on day one." |
+| 0:35 | Stay on the project | "Quick context on how I see Lyzr. Lyzr builds production agents inside its clients' environments, Agent Studio lets teams build their own, and Architect is the front door that turns an idea into a working app. Today Architect only builds Lyzr agents. I don't know the exact reason, but it's a business decision, so I kept Lyzr as the default and made other frameworks an export." |
+| 1:00 | Stay on the project | "This is a crowded space. Lovable and Replit give you an app without real agents, agent platforms give you agents without the app, and Cursor or Claude Code assume you're a developer. Architect sits where those three meet. Let me sign in and show you." |
 
-**2. Guest mode (0:15–0:40)** [Point to the Demo mode badge. Click through Plan, Preview and
-Code. Press ⌘K → "Take the quick tour"]
-"Anyone can try it without signing up. The flow is the one you already know: prompt, plan,
-preview, ship. A 30-second tour shows the five places that matter."
+**Pause Loom** → account menu → Sign in with GitHub → **Resume**.
 
-**3. How I read Lyzr (0:40–1:05)** [Stay on the guest project]
-"Lyzr builds production agents inside its clients' environments, Agent Studio lets teams build
-their own, and Architect is the vibe-coding front door to both. Today Architect builds only Lyzr
-agents. I don't know Lyzr's exact reason, but it's a business decision: revenue on its runtime,
-guardrails it can guarantee, and focus. So Lyzr stays the default, and other frameworks are an
-export."
+### Part 2: signed in (1:20–5:00)
 
-**4. Positioning (1:05–1:30)** [Still on the project]
-"This is a crowded space with giants. Lovable and Replit build apps without real agents, agent
-platforms build agents without the app, and Cursor or Claude Code assume you're a developer.
-Architect sits at the intersection. Let me sign in and show you."
+| Time | On screen | Say |
+| --- | --- | --- |
+| 1:20 | Dashboard → click the **Yoga studio site** starter → the form opens pre-filled with SEO + GEO and Content mode ticked → Create project | "With an account everything's saved, and Architect remembers me across projects. Starters fill everything in. SEO and GEO is switched on at the start, because it changes how the app gets built." |
+| 1:40 | Plan tab → Generate the plan → point to "What I remembered", the agents, the open question → click one answer → Approve & build | "It plans before it builds. Here it's using what it remembered from my last project. It only adds an agent because this site needs one to answer class questions. When something's unclear, it asks one question with one-click answers." |
+| 2:15 | Build checklist streams → preview appears | "The UI streams in file by file, and the preview is live." |
+| 2:30 | Pro → Code → Edit by hand: break a line → Fix it → read the toast → Memory → Billing ledger | "Now let me break something. It diagnoses the cause first. A past fix is only a hint, it's reused only if the cause matches, and fixes that failed are never repeated. After three tries it rolls back and asks me. And its own fixes aren't billed to me; the ledger shows that." |
+| 3:05 | Memory tab: edit one memory. Agents tab: Compile to Lyzr → LangGraph → CrewAI | "Memory isn't a black box: I can see, edit or delete anything. And one agent spec compiles to Lyzr, LangGraph, CrewAI or the OpenAI SDK, so choosing a framework is never a rewrite." |
+| 3:35 | Click **Connectors** → show the list and "Suggested by your plan" → close. Click the project name → show the project switcher | "Connectors are where agents get their tools: Slack, Gmail, Drive, HubSpot. GitHub and WordPress are live; the rest are a preview of the design. And I can switch projects from the top bar." |
+| 3:55 | ⌘K → type "how much am I paying" → Enter | "Feature search takes you straight to any feature. architect.new doesn't have one." |
+| 4:05 | Ship → Deploy → SEO + GEO report → Content tab: edit an FAQ → Push to GitHub → open the repo | "Ship runs a security check and deploys a pre-rendered page with meta tags, structured data and llms.txt, so it's found on Google and quoted by AI assistants. FAQs from the content editor feed into that. And the code goes to my own GitHub repo." |
+| 4:35 | Architecture diagram tab | "Under the hood: the app is on Vercel, data on Supabase with row-level security, and memory runs on Lyzr Cognis in Docker on AWS, because it needs a long-running server. Agent runs and hosting are placeholders for now, with the production design in ARCHITECTURE.md. From prompt to production. Thanks for watching." |
 
-### Part 2: signed in (1:30–4:50)
+### After recording
 
-**5. Sign in and start (1:30–1:50)** [Sign out → Continue with GitHub → dashboard → New project.
-Tick SEO + GEO and Content mode]
-"With an account, everything is saved and Architect remembers me across projects. I switch on
-SEO + GEO here, at the start, because it changes how the app is built."
-
-**6. Plan (1:50–2:25)** [Generate the plan. Point to "What I remembered", the agents table and
-the open question. Click one answer → Approve & build]
-"It plans before it builds. It recalled my preferences from my earlier project with Lyzr Cognis,
-adds AI agents only if the app needs them, and asks one question with one-click answers."
-
-**7. Build (2:25–2:40)** [The file checklist streams; the preview renders]
-"The UI streams in file by file, and the preview runs live."
-
-**8. Fix memory (2:40–3:10)** [Pro → Code → Edit by hand: break a line → Fix it → the cause in
-the toast → Memory → Billing ledger]
-"When something breaks, it diagnoses the cause first, reuses a past fix only if the cause
-matches, and after three tries rolls back and asks me. Its own fixes aren't billed to me."
-
-**9. Memory and agents (3:10–3:40)** [Memory tab: edit one memory. Agents tab: Compile to Lyzr →
-LangGraph → CrewAI]
-"I can see, edit or delete everything it remembers. And one agent spec compiles to Lyzr,
-LangGraph, CrewAI or the OpenAI Agents SDK, so choosing a framework is never a rewrite."
-
-**10. Feature search (3:40–3:50)** [⌘K → type "how much am I paying" → the ledger opens]
-"Feature search takes you straight to a feature. architect.new doesn't have one."
-
-**11. Ship (3:50–4:20)** [Ship → Deploy → SEO + GEO report → Code: `/dist/index.html`. Push to
-GitHub → open the repo]
-"Ship runs a security check and deploys a pre-rendered page with meta tags, structured data and
-llms.txt, so the app is found on Google and quoted by AI answer engines. The code goes to my own
-GitHub repo."
-
-**12. Architecture and close (4:20–4:50)** [The architecture diagram]
-"The app runs on Vercel, data on Supabase, and memory on Cognis in Docker on AWS, because it needs
-a long-running server that serverless can't give it. Agent runs and hosting are placeholders for
-now, with their production design in ARCHITECTURE.md. From prompt to production. Thanks."
+- Trim the start and end; cut waits during plan, build and fix down to 2–3 seconds.
+- Chapters: Hook · Guest mode · Lyzr · Positioning · Plan · Build · Fix memory · Memory & agents ·
+  Connectors · Search · Ship · Architecture.
+- Captions on. Title: **"Architect 2.0: from prompt to production"**.
+- Share → Anyone with the link → test it in a private window → paste the link in "Any other
+  comments?".
 
 ---
 
