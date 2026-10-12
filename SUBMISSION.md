@@ -196,26 +196,26 @@ The form's project fields, in its order:
 
 ### Why would a non-technical user pick your platform? (vs Replit, Lovable, Emergent)
 
-The interface hasn't been completely redesigned, on purpose. Most users have already used other
-vibe-coding platforms and built habits around them, so Architect keeps that familiar flow and the
-learning curve stays gentle.
+I deliberately didn't redesign the whole interface. Most users have already used other vibe-coding
+platforms and built habits around them, so I kept that familiar flow to keep the learning curve
+gentle.
 
 App builders are a crowded space, and the big ones like Lovable and Replit are great at getting a
 user to a demo that runs. The hard part comes after that: getting people to actually find what the
 user built, not making the user re-explain themselves every time, and adding AI that does something
-useful.
+useful. That's the gap I built Architect 2.0 for.
 
 When a user starts a project, they tick one box if it's a public website, and Architect builds it
 so Google and AI assistants like ChatGPT and Perplexity can read it and quote it. The user doesn't
-need to know anything about SEO. They can edit pages and FAQs themselves in a simple content
-editor, or pull them in from WordPress.
+need to know anything about SEO. I also added a simple content editor, so they can edit pages and
+FAQs themselves or pull them in from WordPress.
 
 Some app builders can add AI features or simple agents now, but those agents live inside their
-platform. Architect treats agents as a core part of the plan, lets each one remember its own users,
-and runs them on Lyzr's enterprise agent platform, or exports them to LangGraph, CrewAI or the
-OpenAI SDK. It's built for the space between app builders and agent platforms.
+platform. I made agents a core part of the plan: each one can remember its own users, and they run
+on Lyzr's enterprise agent platform or export to LangGraph, CrewAI or the OpenAI SDK. I built it
+for the space between app builders and agent platforms.
 
-Architect also remembers the user: their style, where they deploy, and the decisions they've
+I also made Architect remember the user: their style, where they deploy, and the decisions they've
 already made. It carries these into their next project, and the user can see, edit or delete
 anything it remembers. So their tenth app takes a sentence, not a page.
 
@@ -223,53 +223,53 @@ If the user's app needs AI, like a support assistant or a lead scorer, Architect
 for them and suggests the apps those agents should connect to, like Gmail or Slack. If it doesn't,
 the user chooses "no AI agents" and simply gets a regular website or app.
 
-When something breaks, Architect works out why before trying a fix and never repeats a fix that
-already failed. After three tries it rolls back and asks the user one simple question instead of
-burning their credits. Its own fixes aren't charged to the user.
+When something breaks, I made Architect work out why before trying a fix and never repeat a fix
+that already failed. After three tries it rolls back and asks the user one simple question instead
+of burning their credits, and its own fixes aren't charged to the user.
 
-The user also never has to hunt for a feature. They press ⌘K and type what they want in their own
-words, like "undo" or "how much am I paying", and it takes them straight there. Today it matches the
-words they type; a production version could use semantic search, so it would understand what the
-user means even when they don't know the feature's name.
+I also wanted the user never to hunt for a feature. They press ⌘K and type what they want in their
+own words, like "undo" or "how much am I paying", and it takes them straight there. Today it
+matches the words they type; a production version could use semantic search, so it would
+understand what the user means even when they don't know the feature's name.
 
 ### Why would a technical user pick your platform? (vs Claude Code, Codex, Cursor)
 
-Architect isn't pitched as a better code editor than Claude Code, Cursor or Codex. Those tools are
+I didn't try to build a better code editor than Claude Code, Cursor or Codex. Those tools are
 excellent at working inside a repo the developer already owns, and in a market this crowded nobody
-wins on "best code generator", because everyone uses the same models. Architect covers the layer
-around the code that those tools leave to the developer: a business user can start the app, and the
+wins on "best code generator", because everyone uses the same models. I focused on the layer around
+the code that those tools leave to the developer: a business user can start the app, and the
 developer gets portable agents, memory and the code underneath, in one project. App builders like
 Lovable and Replit can add agents too now, but those agents are tied to their platform; in
 Architect, each agent is one spec the developer can take anywhere.
 
 First, agents. The developer describes an agent once, and Architect compiles it to Lyzr, LangGraph,
 CrewAI, the OpenAI Agents SDK or plain TypeScript, all behind the same API, so switching frameworks
-isn't a rewrite. Today's architect.new builds only Lyzr agents. The exact reason isn't public, and
-it's most likely a business one (revenue on Lyzr's runtime, guardrails it can guarantee), so Lyzr
-stays the default and the other frameworks are an export.
+isn't a rewrite. Today's architect.new builds only Lyzr agents. I couldn't find Lyzr's exact
+reason, and I assume it's a business one (revenue on its runtime, guardrails it can guarantee), so
+I kept Lyzr as the default and made the other frameworks an export.
 
 Second, memory as infrastructure. Instead of a CLAUDE.md or .cursorrules file the developer
-maintains by hand for each repo, Architect runs Lyzr's open-source Cognis, self-hosted on AWS:
-hybrid vector and keyword search, versioned facts, scoped to the developer across every project.
-Every reply shows which memories were used, and the developer can edit or delete them.
+maintains by hand for each repo, I run Lyzr's open-source Cognis, self-hosted on AWS: hybrid vector
+and keyword search, versioned facts, scoped to the developer across every project. Every reply
+shows which memories were used, and the developer can edit or delete them.
 
-Third, a fix loop they can trust. Errors are fingerprinted by message and location, and past fixes
-are only hints: the model has to diagnose the cause before reusing one. A loop breaker rolls back
-after three failed attempts, across sessions, not just within one.
+Third, a fix loop they can trust. I fingerprint errors by message and location, and past fixes are
+only hints: the model has to diagnose the cause before reusing one. A loop breaker rolls back after
+three failed attempts, across sessions, not just within one.
 
 Fourth, production defaults: static-first builds with JSON-LD, a sitemap and llms.txt for SEO and
 GEO, a security check before deploy, and the code pushed to the developer's own GitHub repo. Pro
 mode gives them diffs, edit-by-hand, logs, a run trace and a ledger of every token.
 
-Smaller things add up too: a project switcher, a connectors catalogue for the tools agents use, and
-⌘K feature search. Search matches words today; a production version could move it to semantic
-search on the same vector + keyword engine that powers memory, so "where did my money go" would find
-the billing ledger.
+I also added smaller things that add up: a project switcher, a connectors catalogue for the tools
+agents use, and ⌘K feature search. Search matches words today; a production version could move it
+to semantic search on the same vector + keyword engine that powers memory, so "where did my money
+go" would find the billing ledger.
 
 Architect is model-agnostic (Anthropic, OpenAI, Google, Groq, OpenRouter), and an MCP bridge could
-let the developer drive the same project from their own editor, so Architect sits next to Claude
-Code, not instead of it. To be upfront: sign-in, the database, chat, planning and building, the
-live preview, SEO + GEO files, the content editor, Cognis memory and GitHub push are live; agent
-runs, hosting and most connectors are placeholders, and ARCHITECTURE.md describes how each could
-work in production. There's a 5-minute walkthrough here:
+let the developer drive the same project from their own editor, so I see Architect sitting next to
+Claude Code, not replacing it. To be upfront: sign-in, the database, chat, planning and building,
+the live preview, SEO + GEO files, the content editor, Cognis memory and GitHub push are live;
+agent runs, hosting and most connectors are placeholders, and ARCHITECTURE.md describes how each
+could work in production. There's a 5-minute walkthrough here:
 https://www.loom.com/share/2b6f632aba244c0b9f9e66a5f128593c
