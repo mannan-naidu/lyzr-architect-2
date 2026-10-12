@@ -19,7 +19,7 @@
   }
   * { box-sizing: border-box; margin: 0; }
   body { background: var(--ink); color: var(--paper); font-family: "Instrument Sans", sans-serif; }
-  #canvas { position: relative; width: 2180px; height: 1260px; overflow: hidden;
+  #canvas { position: relative; width: 2180px; height: 1540px; overflow: hidden;
     background-image: linear-gradient(var(--ink-2) 1px, transparent 1px), linear-gradient(90deg, var(--ink-2) 1px, transparent 1px);
     background-size: 40px 40px; }
   .title { position: absolute; left: 60px; top: 36px; }
@@ -58,7 +58,7 @@
 <div id="canvas">
   <div class="title">
     <h1>Architect 2.0 · system architecture</h1>
-    <p>From prompt to production: AI apps that get found, remember, and run any agent. Prompt → plan → build → verify/fix → GitHub → deploy</p>
+    <p>From prompt to production: AI apps that get found, remember, and run any agent. Prompt → plan → build → verify/fix → GitHub → deploy · Vercel (web) + Supabase (data, auth) + AWS (memory)</p>
   </div>
   <div class="legend">
     <span><i class="sw"></i>built (prototype)</span>
@@ -77,16 +77,17 @@
     <h3>User <span class="tag t-built">GITHUB · GOOGLE · DEMO</span></h3>
     <p>Non-technical or developer. One project, two lenses.</p>
   </div>
-  <div class="box key" style="left:60px;top:270px;width:360px;height:196px">
+  <div class="box key" style="left:60px;top:270px;width:360px;height:212px">
     <h3>Workspace UI <span class="tag t-built">NEXT.JS RSC</span></h3>
     <ul>
       <li>Chat with <b style="color:var(--paper);font-weight:500">parallel prompts</b>, model picker</li>
       <li>Plan · Preview · Code · Memory · Agents · Ship</li>
       <li><b style="color:var(--paper);font-weight:500">Simple</b> lens ↔ <b style="color:var(--paper);font-weight:500">Pro</b> lens (diffs, logs, trace)</li>
-      <li>⌘K palette · first-run tour</li>
+      <li>⌘K feature search · first-run tour</li>
+      <li>Project switcher · Connectors</li>
     </ul>
   </div>
-  <div class="box" style="left:60px;top:500px;width:360px;height:110px">
+  <div class="box" style="left:60px;top:504px;width:360px;height:110px">
     <h3>Live preview iframe <span class="tag t-built">SANDPACK</span></h3>
     <p>Bundles the generated React app in the browser. Errors → <b style="color:var(--paper);font-weight:500">Fix it · free</b>. Clean render → fix remembered.</p>
   </div>
@@ -147,12 +148,12 @@
   <!-- Data -->
   <div class="box" style="left:1400px;top:160px;width:320px;height:74px">
     <h3>Auth <span class="tag t-built">JWT</span></h3>
-    <p>GitHub · Google · anonymous demo</p>
+    <p>GitHub · Google (account picker) · guest demo</p>
   </div>
   <div class="box" style="left:1400px;top:256px;width:320px;height:236px">
     <h3>Postgres + RLS <span class="tag t-built">OWNER-ONLY</span></h3>
     <ul>
-      <li>projects (plan, agent_spec, flags)</li>
+      <li>projects (plan, agent_spec, seo / cms / agents flags)</li>
       <li>project_files (+ previous_content)</li>
       <li>run_events (trace + logs)</li>
       <li style="color:var(--blue)">fix_attempts (fix memory)</li>
@@ -184,32 +185,73 @@
     <p>Cognis: Groq extracts + versions facts, Gemini embeds (768d / 256d)</p>
   </div>
 
+
+  <!-- Product features band (built) -->
+  <div class="container" style="left:60px;top:950px;width:2060px;height:270px">
+    <div class="lane">Product features (built in the prototype)</div>
+  </div>
+  <div class="box" style="left:96px;top:986px;width:520px;height:212px">
+    <h3>SEO + GEO pipeline <span class="tag t-built">BUILD MODE</span></h3>
+    <div class="flow"><b>Static-first build</b><i>→</i><b>Pre-render snapshot</b><i>→</i><b>/dist/index.html</b><i>→</i><b>Audit /100</b></div>
+    <ul>
+      <li>Switched on at project start; builder renders all content as HTML</li>
+      <li>Snapshot via postMessage from the preview (react-snap technique)</li>
+      <li>Meta + OpenGraph + JSON-LD · sitemap · robots (AI crawlers) · llms.txt</li>
+    </ul>
+  </div>
+  <div class="box" style="left:680px;top:986px;width:430px;height:212px">
+    <h3>Content mode (CMS) <span class="tag t-built">CMS_ENTRIES</span></h3>
+    <ul>
+      <li>Pages · posts · FAQs, edited without code</li>
+      <li>Import from WordPress REST (SSRF-guarded)</li>
+      <li>Published FAQs → FAQPage JSON-LD + llms.txt on deploy</li>
+      <li style="color:var(--muted)">Pages rendered into app HTML: production</li>
+    </ul>
+  </div>
+  <div class="box" style="left:1170px;top:986px;width:440px;height:212px">
+    <h3>Project setup &amp; plan <span class="tag t-built">ZOD</span></h3>
+    <ul>
+      <li>AI agents: "if it needs AI" or "none" (enforced on the plan)</li>
+      <li>SEO + GEO · Content mode · memory switches; one-click starters</li>
+      <li>Plan asks one question with 2–4 one-click answers</li>
+      <li>Project switcher in the top bar</li>
+    </ul>
+  </div>
+  <div class="box" style="left:1670px;top:986px;width:420px;height:212px">
+    <h3>Feature search · Connectors <span class="tag t-sim">PART MOCK</span></h3>
+    <ul>
+      <li>⌘K: weighted text match over a feature index → <span style="color:var(--paper)">semantic (vector + BM25)</span> in production</li>
+      <li>Connectors: GitHub + WordPress live; Slack, Gmail, Drive, HubSpot… mocked</li>
+      <li>Production: OAuth apps, encrypted tokens, tools served to agents over MCP</li>
+    </ul>
+  </div>
+
   <!-- Production band -->
-  <div class="container" style="left:60px;top:980px;width:2060px;height:236px;border-style:dashed">
+  <div class="container" style="left:60px;top:1260px;width:2060px;height:236px;border-style:dashed">
     <div class="lane">Production scale-out (designed, not in the prototype)</div>
   </div>
-  <div class="box prod" style="left:96px;top:1020px;width:330px;height:160px">
+  <div class="box prod" style="left:96px;top:1300px;width:330px;height:160px">
     <h3>Run queue <span class="tag t-prod">REDIS / SQS</span></h3>
     <p>POST /runs → runId. Per-tenant fair scheduling, plan concurrency limits, backpressure instead of errors.</p>
   </div>
-  <div class="box prod" style="left:500px;top:1020px;width:330px;height:160px">
+  <div class="box prod" style="left:500px;top:1300px;width:330px;height:160px">
     <h3>Harness workers <span class="tag t-prod">FLY / ECS</span></h3>
     <p>Autoscale on queue depth. Runs survive closed tabs; SSE replay from run_events (Last-Event-ID).</p>
   </div>
-  <div class="box prod" style="left:904px;top:1020px;width:430px;height:160px">
+  <div class="box prod" style="left:904px;top:1300px;width:430px;height:160px">
     <h3>E2B sandboxes <span class="tag t-prod">FIRECRACKER</span></h3>
     <p>One microVM per project: vite dev :5173, agent runtime :8000 (POST /agents/{name}/run), tool executor. Warm pool → pause on idle → resume ~1s.</p>
   </div>
-  <div class="box prod" style="left:1408px;top:1020px;width:310px;height:160px">
+  <div class="box prod" style="left:1408px;top:1300px;width:310px;height:160px">
     <h3>Egress proxy <span class="tag t-prod">ALLOW-LIST</span></h3>
     <p>Sandboxes reach only registries, the model gateway and declared APIs. Logged.</p>
   </div>
-  <div class="box prod" style="left:1792px;top:1020px;width:300px;height:160px">
+  <div class="box prod" style="left:1792px;top:1300px;width:300px;height:160px">
     <h3>Observability <span class="tag t-prod">OTEL</span></h3>
     <p>Trace ids UI → run → model call. Sentry, PostHog, cost dashboards.</p>
   </div>
 
-  <svg viewBox="0 0 2180 1260" width="2180" height="1260">
+  <svg viewBox="0 0 2180 1540" width="2180" height="1540">
     <defs>
       <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="oklch(0.8946 0.0155 90.24)"/></marker>
       <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="oklch(0.6014 0.1657 253.83)"/></marker>
@@ -222,7 +264,7 @@
         <path d="M420 322 H498"/>
         <path d="M790 322 H828 V221 H864"/>
         <path d="M828 322 V335 H864"/>
-        <path d="M240 466 V498"/>
+        <path d="M240 482 V502"/>
         <path d="M1080 266 V402"/>
         <path d="M1080 584 V606"/>
         <path d="M1294 221 H1398"/>
@@ -241,18 +283,18 @@
       <!-- production (dashed) -->
       <g stroke="oklch(0.68 0.015 90)" stroke-dasharray="7 6" marker-end="url(#ad)">
         <path d="M420 555 H498"/>
-        <path d="M645 610 V950 H1140 V1018"/>
-        <path d="M1000 920 V1018"/>
-        <path d="M426 1100 H498"/>
-        <path d="M830 1100 H902"/>
-        <path d="M1334 1100 H1406"/>
+        <path d="M645 610 V1236 H1125 V1298"/>
+        <path d="M1000 920 V936 H1145 V1298"/>
+        <path d="M426 1380 H498"/>
+        <path d="M830 1380 H902"/>
+        <path d="M1334 1380 H1406"/>
       </g>
     </g>
     <g>
       <rect class="lbl-bg" x="424" y="296" width="74" height="18"/><text class="lbl" x="428" y="309">HTTPS</text>
       <rect class="lbl-bg" x="1090" y="320" width="0" height="0"/>
       <rect class="lbl-bg" x="1088" y="372" width="148" height="18"/><text class="lbl" x="1092" y="385">NDJSON / stream</text>
-      <rect class="lbl-bg" x="250" y="474" width="96" height="18"/><text class="lbl" x="254" y="487">files[] →</text>
+      <rect class="lbl-bg" x="250" y="483" width="96" height="18"/><text class="lbl" x="254" y="496">files[] →</text>
       <rect class="lbl-bg" x="1440" y="662" width="220" height="18"/><text class="lbl" x="1444" y="675">structured output · tokens</text>
       <rect class="lbl-bg" x="1440" y="790" width="176" height="18"/><text class="lbl" x="1444" y="803" style="fill:oklch(0.6014 0.1657 253.83)">capture → extract facts</text>
       <rect class="lbl-bg" x="950" y="640" width="0" height="0"/>
@@ -260,8 +302,8 @@
       <rect class="lbl-bg" x="1300" y="196" width="94" height="18"/><text class="lbl" x="1304" y="209">RLS as user</text>
       <rect class="lbl-bg" x="452" y="770" width="140" height="18"/><text class="lbl" x="456" y="783" style="fill:oklch(0.6014 0.1657 253.83)">list · edit · forget</text>
       <rect class="lbl-bg" x="655" y="790" width="0" height="0"/>
-      <rect class="lbl-bg" x="1010" y="926" width="210" height="18"/><text class="lbl" x="1014" y="939" style="fill:oklch(0.68 0.015 90)">enqueue runs (production)</text>
-      <rect class="lbl-bg" x="655" y="920" width="190" height="18"/><text class="lbl" x="659" y="933" style="fill:oklch(0.68 0.015 90)">preview → sandbox port</text>
+      <rect class="lbl-bg" x="1152" y="1226" width="210" height="18"/><text class="lbl" x="1156" y="1239" style="fill:oklch(0.68 0.015 90)">enqueue runs (production)</text>
+      <rect class="lbl-bg" x="655" y="1226" width="190" height="18"/><text class="lbl" x="659" y="1239" style="fill:oklch(0.68 0.015 90)">preview → sandbox port</text>
     </g>
   </svg>
 </div>

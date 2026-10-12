@@ -14,11 +14,28 @@
 *Diagram source: [`docs/architecture/diagram.html`](docs/architecture/diagram.html), exported to
 PNG. Mermaid versions of the main views are below, so they render on GitHub.*
 
+**Live app:** https://lyzr-architect-2o.vercel.app · **Repo:** https://github.com/mannan-naidu/lyzr-architect-2 ·
+**Walkthrough:** [Loom](https://www.loom.com/share/2b6f632aba244c0b9f9e66a5f128593c)
+
+### Where the brief's questions are answered
+
+| The brief asks about | Section |
+| --- | --- |
+| Key architectural decisions | [§1.1](#11-key-decisions-at-a-glance), with full ADRs in [`docs/decisions.md`](docs/decisions.md) |
+| Sandboxing | [§6](#6-sandboxes-and-live-preview) |
+| The agent harness | [§5](#5-the-agent-harness-plan--build--verify--fix) |
+| The proxy (proxies) | [§10](#10-the-proxies) |
+| Model-agnosticism (and agent-agnosticism) | [§7](#7-model-agnostic-the-model-gateway), [§8](#8-agent-agnostic-one-spec-any-framework) |
+| GitHub integration | [§11](#11-github) |
+| Deployment (user apps and Architect itself) | [§12](#12-deployment-user-apps-and-architect-itself) |
+| Scaling | [§13](#13-scaling-to-thousands-of-concurrent-users) |
+| Memory (Architect's core idea) | [§4](#4-the-memory-layer-the-engine) |
+
 ---
 
 ## Contents
 
-1. [The idea in one paragraph](#1-the-idea-in-one-paragraph)
+1. [The idea in one paragraph](#1-the-idea-in-one-paragraph) · [1.1 Key decisions](#11-key-decisions-at-a-glance) · [1.2 Tech stack](#12-tech-stack)
 2. [From prompt to live app](#2-from-prompt-to-live-app-the-walkthrough)
 3. [System overview](#3-system-overview)
 4. [The memory layer](#4-the-memory-layer-the-engine)
@@ -26,15 +43,16 @@ PNG. Mermaid versions of the main views are below, so they render on GitHub.*
 6. [Sandboxes and live preview](#6-sandboxes-and-live-preview)
 7. [Model-agnostic: the model gateway](#7-model-agnostic-the-model-gateway)
 8. [Agent-agnostic: one spec, any framework](#8-agent-agnostic-one-spec-any-framework)
-9. [Frontend ↔ backend ↔ sandbox](#9-frontend--backend--sandbox)
+9. [Frontend ↔ backend ↔ sandbox](#9-frontend--backend--sandbox) · [9.1 Feature search](#91-feature-search-k) · [9.2 Project setup and switching](#92-project-setup-and-switching) · [9.3 Connectors](#93-connectors)
 10. [The proxies](#10-the-proxies)
 11. [GitHub](#11-github)
 12. [Deployment: user apps and Architect itself](#12-deployment-user-apps-and-architect-itself)
 13. [Scaling to thousands of concurrent users](#13-scaling-to-thousands-of-concurrent-users)
-14. [Security and multi-tenancy](#14-security-and-multi-tenancy)
+14. [Security and multi-tenancy](#14-security-and-multi-tenancy) · [14.1 Sign-in flows](#141-sign-in-flows)
 15. [Data model](#15-data-model)
 16. [Prototype: real vs simulated](#16-prototype-real-vs-simulated)
 17. [Failure modes](#17-failure-modes)
+18. [Where the code lives](#18-where-the-code-lives)
 
 ---
 
@@ -54,6 +72,46 @@ The memory layer is what makes the loop feel different from every other vibe-cod
 Builder memory runs on Lyzr Cognis (open source), and you can switch memory on for the agents you build (Cognis in
 production). Everything else follows the familiar vibe-coding flow (prompt → plan → build →
 preview → deploy), so there's nothing new to learn.
+
+**Where it sits in the market.** The space is crowded: app builders (Lovable, Replit, Bolt, v0,
+Emergent) give you an app but no real agents; agent platforms (Lyzr Studio, n8n, Relevance AI) give
+you agents but no app; coding tools (Cursor, Claude Code, Codex) assume you're a developer.
+Architect 2.0 is designed for the intersection, so the architecture has to serve a non-technical
+user (Simple mode, guided plan, no setup) and a developer (Pro mode, real code, GitHub, any
+framework) on the *same* project.
+
+### 1.1 Key decisions at a glance
+
+| # | Decision | Alternatives considered | Why |
+| --- | --- | --- | --- |
+| 1 | **Next.js on Vercel** for the web tier and short API calls | AWS end to end; Render | Streaming RSC, preview deploys per branch, zero ops for a stateless tier (ADR-001) |
+| 2 | **Supabase** Postgres + Auth, with **RLS as the security boundary** | Hand-rolled auth checks; Firebase | One JWT drives both auth and row-level access; nothing to forget in app code (ADR-002) |
+| 3 | **One memory system: Lyzr Cognis**, self-hosted in Docker on **AWS EC2** | Plain Postgres tables; Memori; mem0 | Lyzr's own engine; hybrid vector + BM25 recall; versioned facts. Needs a disk and a warm process Vercel can't give (ADR-006, §12) |
+| 4 | **Memory behind an interface** (`MemoryProvider`) | Calling Cognis directly | Swappable backend; memory outages degrade to "no recall", never a failed turn (ADR-004) |
+| 5 | **Four kinds of memory, four stores** (builder, decisions, fixes, agent) | One vector store for everything | Preferences need fuzzy recall; decisions must always apply; fixes need exact signatures (§4) |
+| 6 | **Diagnosis-first fix memory + loop breaker** | Reuse the fix whenever the error text matches | The same message can have different causes; 3 tries per error *location*, then roll back and ask (§4, §5) |
+| 7 | **Typed harness**: every stage returns a zod-validated object | Free-text prompts parsed with regex | Partial streaming UI, no parsing bugs, provider-neutral structured output (§5) |
+| 8 | **Model gateway** on the Vercel AI SDK, 5 providers | One provider SDK | Model choice per message; normalized streaming, tools and usage (§7) |
+| 9 | **One AgentSpec, many frameworks** (Lyzr default) | Generate framework code directly | The UI never depends on a framework; Lyzr stays default, others are an export (§8) |
+| 10 | **Sandpack now, E2B microVMs in production** | WebContainers; plain containers | Zero-cost browser preview for the prototype; real Node/Python isolation later (§6) |
+| 11 | **SEO + GEO as a build mode**, chosen at project start | An SEO add-on at deploy time | A client-rendered SPA ships an empty page to crawlers; content must be HTML from the first build (§12) |
+| 12 | **Self-fixes billed to the agent** (ledger) | Bill every model call to the user | Makes "fixes are free" measurable and bounded (§5, §13) |
+| 13 | **Apps don't need agents** (`agents_enabled`) | Every app gets an agent | Many apps (portfolios, sites) need none; the plan is forced to 0 agents when the user says so (§9.2) |
+
+### 1.2 Tech stack
+
+| Layer | Choice |
+| --- | --- |
+| Web app | Next.js 16 (App Router, React Server Components, server actions), TypeScript strict, Tailwind v4, shadcn/ui |
+| Hosting | Vercel (auto-deploys on push; preview URL per deployment) |
+| Data + auth | Supabase Postgres with row-level security on every table; Supabase Auth (GitHub, Google, anonymous guests) |
+| Memory | Lyzr Cognis (open source) in a FastAPI service, Docker Compose + Caddy (HTTPS) on AWS EC2 (Mumbai) |
+| Memory models | Fact extraction: GPT-OSS 20B on Groq (via LiteLLM). Embeddings: Gemini `gemini-embedding-001` (768d / 256d) |
+| LLMs | Vercel AI SDK: Anthropic, OpenAI, Google, Groq, OpenRouter |
+| Live preview | Sandpack (in-browser bundler) |
+| GitHub | Octokit (Git Data API), AES-256-GCM token encryption |
+| Validation | zod on every env var, server action, route body and model output |
+| Package manager | pnpm |
 
 ---
 
@@ -111,9 +169,12 @@ sequenceDiagram
 
 **Step by step:**
 
-1. **Prompt.** The user types an idea on the homepage. A project row is created (Postgres, RLS
-   owner-only) and the user lands in the workspace. Chat sits on the left; the Plan / Preview /
-   Code / Memory / Agents / Ship tabs sit on the right. A five-step tour runs the first time.
+1. **Prompt.** The user types an idea on the homepage (or picks a one-click starter on the
+   dashboard). The new-project form sets three things up front: **AI agents** ("if it needs AI" or
+   "no AI agents"), **SEO + GEO** (public website) and **Content mode**. A project row is created
+   (Postgres, RLS owner-only) and the user lands in the workspace. Chat sits on the left; the Plan /
+   Preview / Code / Memory / Agents / Ship tabs sit on the right. A seven-step tour runs the first
+   time.
 2. **Auth and budget.** Every API call checks the Supabase session (`proxy.ts` refreshes it on
    every request), loads the project *as the user*, so RLS decides access, and checks the user's
    daily token cap. Demo-mode guests get a lower cap.
@@ -122,7 +183,9 @@ sequenceDiagram
    over between projects. The **decision log** for this project is always injected.
 4. **Plan.** The model gateway generates a typed `Plan` (zod schema): screens, user stories,
    **agents** (role, instructions, tools, memory, hand-offs; zero if the app doesn't need AI, such as
-   a portfolio site), data sources, decisions and one open question. The UI shows exactly which memories shaped it.
+   a portfolio site, and forced to zero when the user chose "no AI agents"), data sources, decisions,
+   and one open question with **2–4 one-click answers** (clicking one revises the plan). The UI shows
+   exactly which memories shaped it.
 5. **Approve.** Approval locks the plan, writes its decisions to the decision log and stores the
    agents as the project's `agent_spec`. That spec is framework-neutral (§8).
 6. **Build.** The harness streams a typed `files[]` object. As each file path appears, the UI ticks
@@ -179,7 +242,7 @@ flowchart LR
     MP["MemoryProvider<br/>(Cognis client)"]
   end
 
-  subgraph Data["Supabase"]
+  subgraph Data["Data · Supabase + AWS"]
     PG[("Postgres + RLS<br/>projects · files · run_events<br/>fix_attempts · decisions · ledger")]
     MEM[("Cognis memory service<br/>AWS EC2 · Docker<br/>vectors + BM25")]
     AUTH["Auth<br/>GitHub · Google · anonymous"]
@@ -193,6 +256,7 @@ flowchart LR
 
   LLM["LLM providers<br/>Anthropic · OpenAI · Google · Groq · OpenRouter"]
   GH["GitHub (Octokit → GitHub App)"]
+  CONN["Connectors<br/>GitHub · WordPress live; others mocked<br/>production: OAuth + MCP tools"]
   HOST["Hosting<br/>Vercel API (UI) + agent runtime (Cloud Run/Fly)"]
 
   UI -->|HTTPS + NDJSON/SSE| PX --> RH & SA
@@ -204,6 +268,7 @@ flowchart LR
   SP -. production .-> PP --> E2B
   HAR -. production .-> Q --> WK --> E2B
   SA --> GH
+  SA -.-> CONN
   SA --> HOST
 ```
 
@@ -498,6 +563,39 @@ does it. It opens the right tab and sub-view, and switches to Pro mode if the fe
   - Searches that open no result are logged; they show missing features and missing synonyms.
   - Results can be personalised with builder memory: a user who deploys often sees Deploy first.
 
+### 9.2 Project setup and switching
+
+- **Setup choices are data, not prompts.** `projects.agents_enabled`, `seo_enabled` and
+  `cms_enabled` are columns set by the new-project form and changeable later (Plan tab switches,
+  Ship). The harness reads them on every run:
+  - `agents_enabled = false` → the planner is told "no AI agents" *and* the returned plan is
+    overwritten with `agents: []`, so the rule can't be ignored by the model;
+  - `seo_enabled` → the builder and fixer get the static-first rules (§12);
+  - `cms_enabled` → the Content tab and the WordPress import appear.
+  Reads of `agents_enabled` are tolerant of a database that hasn't run the migration yet.
+- **Starters.** The empty dashboard offers one-click starting points that pre-fill the form (name,
+  idea and options) through URL parameters, so a first-time user never faces a blank page.
+- **Project switcher.** The `workspace / <project>` breadcrumb is a menu of the user's recent
+  projects (one RLS query, newest first), plus New project and All projects, like Claude Code,
+  Lovable and architect.new.
+
+### 9.3 Connectors
+
+Connectors are how agents get tools (Slack, Gmail, Google Drive, Notion, HubSpot, Salesforce,
+Stripe, Zendesk, Postgres, webhooks, custom MCP servers).
+- **Prototype:** a catalogue in the workspace top bar. **GitHub** (real connection status) and
+  **WordPress** (real import in Content mode) are live; the others simulate the connect step and
+  are remembered per project in the browser. Connectors whose purpose matches the plan's agent
+  tools ("send email" → Gmail, "escalate" → Slack) are marked *Suggested by your plan*.
+- **Production design:**
+  - each connector is an **OAuth app**; tokens are encrypted at rest like GitHub's (AES-256-GCM,
+    per-user), refreshed server-side, never sent to the browser;
+  - connectors are exposed to agents as **tools over MCP**, so the same connection works whichever
+    framework the agent compiles to;
+  - **per-agent scopes**: an agent only sees the connectors its spec lists, and write actions
+    (send, post, refund) need an explicit allow in the spec;
+  - calls go through the egress proxy (§10) and are logged in the run trace.
+
 ## 10. The proxies
 
 There are three different proxies. Each has one job.
@@ -672,6 +770,22 @@ fix memory reduces repeat fixes, and the loop breaker caps them at 3 per error.
 
 ---
 
+### 14.1 Sign-in flows
+
+- **OAuth with PKCE.** GitHub and Google sign-in go through Supabase Auth. The PKCE verifier is a
+  cookie on the app's domain, so a sign-in must start and finish in the same browser; a stale or
+  cross-device link shows a plain-language "start again here" message.
+- **Account picker.** Every sign-in passes `prompt=select_account`, so users can choose a
+  different GitHub or Google account than the one their browser is signed in to. The account menu
+  has *Switch account*.
+- **GitHub token capture.** The callback is the only moment the provider token is available; it's
+  verified, encrypted and stored for Ship → GitHub (§11).
+- **Guests.** *Try the demo* creates an anonymous Supabase user with a seeded project and a lower
+  token cap. Guests can open the login page to sign in with a real account (signed-in users are
+  redirected away from it).
+- **Redirect safety.** Supabase only returns to allow-listed URLs; if a provider code ever lands on
+  the homepage instead of `/auth/callback`, `proxy.ts` forwards it so sign-in still completes.
+
 ## 15. Data model
 
 ```mermaid
@@ -696,6 +810,7 @@ erDiagram
     bool memory_enabled
     bool seo_enabled
     bool cms_enabled
+    bool agents_enabled
   }
   fix_attempts {
     text error_signature
@@ -726,6 +841,9 @@ Builder memories don't live in Postgres. They're in the Cognis memory service's 
 | Streaming chat, 5 providers, parallel prompts | E2B sandboxes (Sandpack runs the UI in the browser) |
 | Plan → approve → build, typed and streamed | Lyzr / LangGraph / CrewAI runtimes (code is generated for real) |
 | Live preview (Sandpack) with error capture | GitHub App + webhooks (OAuth token used instead) |
+| New-project choices (AI agents yes/no, SEO + GEO, Content mode), one-click starters | |
+| Plan questions with one-click answers | |
+| Feature search (⌘K) with weighted text matching | Semantic feature search (vector + BM25), production design (§9.1) |
 | Project switcher (top-bar project name) | Connectors other than GitHub and WordPress (Slack, Gmail, Drive, Notion, HubSpot, Stripe…): UI mock-up; production = OAuth apps with encrypted tokens served to agents over MCP |
 | Fix memory, loop breaker, rollback, fair-billing ledger | |
 | Builder memory on Lyzr Cognis (AWS service): capture, hybrid recall, list/edit/delete/forget | |
@@ -748,6 +866,29 @@ Builder memories don't live in Postgres. They're in the Cognis memory service's 
 | User closes the tab mid-build | Prototype: the run finishes server-side and files are saved. Production: the queue keeps running; reopening replays `run_events` |
 | GitHub token revoked | Push returns "Reconnect GitHub"; reconnecting re-captures the token |
 | Token cap reached | 429 with a readable message; self-fixes keep working (they use the separate agent budget) |
+
+---
+
+## 18. Where the code lives
+
+| Path | What it is |
+| --- | --- |
+| `app/page.tsx`, `app/_landing/` | Landing page and its interactive demos |
+| `app/login/`, `app/auth/` | Sign-in page, OAuth callback (GitHub token capture), sign-out |
+| `app/(app)/dashboard/` | Project list, starters, new-project form and its server action |
+| `app/(app)/p/[id]/` | The workspace: layout, shared state, project switcher, connectors, server actions |
+| `app/(app)/p/[id]/panels/` | One file per tab: Plan, Preview (Sandpack), Code, Memory, Agents, Content, Ship, Logs |
+| `app/api/projects/[id]/{plan,build,fix,chat}` | The harness's streaming route handlers |
+| `app/api/health` | Status for operators: deployment, providers, memory self-test |
+| `lib/ai/` | Model gateway (provider registry) |
+| `lib/memory/` | `MemoryProvider` interface and the Cognis HTTP client |
+| `lib/build/` | Plan/build/fix schemas and prompts, error signatures, token caps, file store, agent runtime shim |
+| `lib/agents/codegen.ts` | AgentSpec → Lyzr / LangGraph / CrewAI / OpenAI Agents / TypeScript |
+| `lib/ship/` | SEO + GEO files and audit, security pre-check |
+| `lib/features.ts` | Feature-search index and ranking |
+| `proxy.ts` | Session refresh, route guard, stray OAuth code forwarding |
+| `supabase/migrations/` | Schema and RLS policies (source of truth); `setup.sql` bundles them |
+| `memory-service/` | Cognis service: FastAPI app, Dockerfile, Compose, Caddy, one-command EC2 setup |
 
 ---
 
