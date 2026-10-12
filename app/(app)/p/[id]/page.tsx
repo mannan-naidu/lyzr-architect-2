@@ -33,7 +33,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
   // RLS returns nothing for other users' projects, so "not yours" and "doesn't exist" look the same.
   if (!project) notFound();
 
-  const [messages, files, decisions, events, fixes, ledger] = await Promise.all([
+  const [messages, files, decisions, events, fixes, ledger, projects] = await Promise.all([
     supabase
       .from("messages")
       .select("id, role, content")
@@ -57,6 +57,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
       .not("tokens_in", "is", null)
       .order("created_at", { ascending: false })
       .limit(200),
+    supabase.from("projects").select("id, name, updated_at").order("updated_at", { ascending: false }).limit(30),
   ]);
 
   // Stored as plain text; the per-turn memory/usage parts are live-only for now.
@@ -88,6 +89,7 @@ export default async function ProjectPage({ params, searchParams }: PageProps<"/
     events: events.data ?? [],
     fixes: fixes.data ?? [],
     ledger: ledger.data ?? [],
+    projects: projects.data ?? [],
   };
 
   return (

@@ -94,6 +94,22 @@ export const FEATURES: Feature[] = [
     where: "Workspace → chat (left)",
   },
   {
+    id: "connectors",
+    title: "Connectors",
+    summary: "Connect Slack, Gmail, Drive, Notion, HubSpot, Stripe and more; agents get each one as a tool.",
+    keywords: ["connector", "connectors", "integration", "integrations", "connect", "slack", "gmail", "email", "drive", "notion", "hubspot", "salesforce", "stripe", "zendesk", "mcp", "webhook", "api", "tools"],
+    target: { kind: "element", selector: '[data-tour="connectors"]', label: "connectors" },
+    where: "Workspace → top bar → Connectors",
+  },
+  {
+    id: "switch-project",
+    title: "Switch project",
+    summary: "Jump to another project from the name in the top bar.",
+    keywords: ["switch", "project", "projects", "change project", "open project", "other project", "workspace"],
+    target: { kind: "element", selector: '[data-tour="project-switcher"]', label: "project switcher" },
+    where: "Workspace → top bar → project name",
+  },
+  {
     id: "model",
     title: "Choose the AI model",
     summary: "Switch between Claude, GPT, Gemini, Groq and OpenRouter models per message.",

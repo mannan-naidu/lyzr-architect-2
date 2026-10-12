@@ -29,6 +29,8 @@ export type WorkspaceData = {
   fixes: FixAttempt[];
   /** Fair-billing ledger: every model call with its tokens and who pays for it. */
   ledger: LedgerRow[];
+  /** The user's projects, newest first, for the project switcher. */
+  projects: { id: string; name: string; updated_at: string }[];
 };
 
 export type LedgerRow = {

@@ -41,7 +41,9 @@ import { FRAMEWORK_LABELS, type AgentFramework, type AppMode } from "@/lib/types
 import { setProjectMode } from "./actions";
 import { AgentsPanel } from "./panels/agents-panel";
 import { CodePanel } from "./panels/code-panel";
+import { ConnectorsDialog } from "./connectors-dialog";
 import { ContentPanel } from "./panels/content-panel";
+import { ProjectSwitcher } from "./project-switcher";
 import { LogsPanel, TracePanel } from "./panels/logs-panel";
 import { MemoryPanel } from "./panels/memory-panel";
 import { PlanPanel } from "./panels/plan-panel";
@@ -163,12 +165,11 @@ function WorkspaceShell({
       {/* ── Top bar ─────────────────────────────────────────────────────────────── */}
       <div className="flex h-12 shrink-0 items-center gap-3 border-b px-4">
         <span className="size-1.5 shrink-0 rounded-full bg-[var(--green)]" aria-hidden />
-        <h1 className="truncate font-mono text-xs font-normal tracking-normal">
-          <span className="text-muted-foreground">workspace / </span>
-          {project.name}
-        </h1>
+        <ProjectSwitcher />
         <span className="label-mono hidden text-primary sm:inline">
-          {FRAMEWORK_LABELS[project.framework as AgentFramework] ?? project.framework}
+          {project.agents_enabled
+            ? (FRAMEWORK_LABELS[project.framework as AgentFramework] ?? project.framework)
+            : "No AI agents"}
         </span>
         {project.memory_enabled ? (
           <span className="label-mono hidden items-center gap-1 text-muted-foreground sm:inline-flex">
@@ -221,6 +222,8 @@ function WorkspaceShell({
           </DropdownMenu>
 
           <Separator orientation="vertical" className="h-6" />
+
+          <ConnectorsDialog />
 
           <div className="flex items-center gap-2" data-tour="ship">
             <Button variant="outline" size="sm" onClick={() => setActiveTab("ship")}>

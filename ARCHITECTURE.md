@@ -726,6 +726,7 @@ Builder memories don't live in Postgres. They're in the Cognis memory service's 
 | Streaming chat, 5 providers, parallel prompts | E2B sandboxes (Sandpack runs the UI in the browser) |
 | Plan → approve → build, typed and streamed | Lyzr / LangGraph / CrewAI runtimes (code is generated for real) |
 | Live preview (Sandpack) with error capture | GitHub App + webhooks (OAuth token used instead) |
+| Project switcher (top-bar project name) | Connectors other than GitHub and WordPress (Slack, Gmail, Drive, Notion, HubSpot, Stripe…): UI mock-up; production = OAuth apps with encrypted tokens served to agents over MCP |
 | Fix memory, loop breaker, rollback, fair-billing ledger | |
 | Builder memory on Lyzr Cognis (AWS service): capture, hybrid recall, list/edit/delete/forget | |
 | Decision log, trace and logs, diffs, edit by hand | |
