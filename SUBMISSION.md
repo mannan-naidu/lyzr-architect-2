@@ -10,6 +10,7 @@
 | Public repo | https://github.com/mannan-naidu/lyzr-architect-2 |
 | Architecture diagram | [`docs/architecture/architecture.png`](docs/architecture/architecture.png) (source: [`diagram.html`](docs/architecture/diagram.html)) |
 | Architecture doc | [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Video walkthrough (Loom) | https://www.loom.com/share/2b6f632aba244c0b9f9e66a5f128593c |
 | Try it without an account | **Try the demo** on the login page (anonymous session, seeded project) |
 
 ---
@@ -194,9 +195,10 @@ The form's project fields, in its order:
 
 ### Why would a non-technical user pick your platform? (vs Replit, Lovable, Emergent)
 
-Most AI app builders are great at getting you to a demo that runs. The hard part comes after
-that: getting people to actually find what you built, not having to re-explain yourself every
-time, and adding AI that does something useful. That's the gap I built Architect 2.0 for.
+App builders are a crowded space, and the big ones like Lovable and Replit are great at getting
+you to a demo that runs. The hard part comes after that: getting people to actually find what you
+built, not having to re-explain yourself every time, and adding AI that does something useful.
+That's the gap I built Architect 2.0 for.
 
 When you start a project, you tick one box if it's a public website, and Architect builds it so
 Google and AI assistants like ChatGPT and Perplexity can read it and quote it. You don't need to
@@ -213,6 +215,11 @@ you. If it doesn't, you just get a regular app.
 And when something breaks, it works out why before trying a fix, never repeats a fix that already
 failed, and after three tries it rolls back and asks you one simple question instead of burning
 your credits. Its own fixes aren't charged to you.
+
+And you never have to hunt for a feature. Press ⌘K and type what you want in your own words,
+like "undo" or "how much am I paying", and it takes you straight there. Today it matches the words
+you type; the production version uses semantic search, so it understands what you mean even when
+you don't know the feature's name.
 
 None of this means learning something new. It's the same describe, plan, preview, ship flow you
 know from Lovable or Replit, with a short tour on day one.
@@ -240,11 +247,18 @@ Fourth, production defaults: static-first builds with JSON-LD, a sitemap and llm
 GEO, a security check before deploy, and the code pushed to your own GitHub repo. Pro mode gives
 you diffs, logs, a run trace and a ledger of every token.
 
+Small things add up too: a project switcher, a connectors catalogue for the tools agents use, and
+⌘K feature search. Search matches words today, and the production design moves it to semantic
+search on the same vector + keyword engine that powers memory, so "where did my money go" finds
+the billing ledger.
+
 It's model-agnostic too (Anthropic, OpenAI, Google, Groq, OpenRouter). The way I see it,
 Architect sits next to Claude Code, not instead of it. The design includes an MCP bridge so you
 can drive the same project from your editor.
 
 ### Any other comments? (optional)
+
+Video walkthrough: https://www.loom.com/share/2b6f632aba244c0b9f9e66a5f128593c
 
 A bit about how I approached this. Lyzr builds production agents inside its clients'
 environments, Agent Studio lets teams build their own, and Architect is the front door that turns
@@ -267,84 +281,8 @@ the live preview, SEO + GEO files, the content editor, Cognis memory and GitHub 
 Agent runs, hosting of user apps and most connectors are placeholders for now, and ARCHITECTURE.md
 describes how each would work in production.
 
----
-
-## Loom script (about 5 minutes)
-
-### Before you record (10 minutes)
-
-1. **Memory prep.** Sign in at https://lyzr-architect-2o.vercel.app with **GitHub**, create any
-   quick project, and say in chat: *"I always want a dark theme and a minimal, clean style."*
-   Wait a minute, then sign out. Memory now has something to recall on camera.
-2. **Guest tab.** Open your small guest project on **Preview**, with the **Demo mode** badge
-   visible.
-3. **Second tab.** `docs/architecture/architecture.png`.
-4. **Settings.** Model: Groq GPT-OSS 120B (fastest). Browser zoom 110–125%, other tabs closed,
-   Do Not Disturb on. Loom: Screen + Camera, **Window** mode, camera bubble bottom-right.
-5. **Pick your break.** Decide which line you'll break for the fix demo (e.g. delete a closing `}`).
-
-### Part 1: guest mode (0:00–1:20)
-
-| Time | On screen | Say |
-| --- | --- | --- |
-| 0:00 | Guest project, Preview tab | "Hi, I'm Mannan. This is Architect 2.0: from prompt to production. It builds AI apps that get found, remember, and run any agent. What you're seeing is guest mode, so no account: this is a real project Architect built." |
-| 0:15 | Point to the Demo mode badge. Click Plan → Preview → Code. ⌘K → "Take the quick tour" (let two steps play) | "Anyone can try it without signing up. The flow is the one you already know from other tools: describe, plan, preview, ship. And there's a short tour on day one." |
-| 0:35 | Stay on the project | "Quick context on how I see Lyzr. Lyzr builds production agents inside its clients' environments, Agent Studio lets teams build their own, and Architect is the front door that turns an idea into a working app. Today Architect only builds Lyzr agents. I don't know the exact reason, but it's a business decision, so I kept Lyzr as the default and made other frameworks an export." |
-| 1:00 | Stay on the project | "This is a crowded space. Lovable and Replit give you an app without real agents, agent platforms give you agents without the app, and Cursor or Claude Code assume you're a developer. Architect sits where those three meet. Let me sign in and show you." |
-
-**Pause Loom** → account menu → Sign in with GitHub → **Resume**.
-
-### Part 2: signed in (1:20–5:00)
-
-| Time | On screen | Say |
-| --- | --- | --- |
-| 1:20 | Dashboard → click the **Yoga studio site** starter → the form opens pre-filled with SEO + GEO and Content mode ticked → Create project | "With an account everything's saved, and Architect remembers me across projects. Starters fill everything in. SEO and GEO is switched on at the start, because it changes how the app gets built." |
-| 1:40 | Plan tab → Generate the plan → point to "What I remembered", the agents, the open question → click one answer → Approve & build | "It plans before it builds. Here it's using what it remembered from my last project. It only adds an agent because this site needs one to answer class questions. When something's unclear, it asks one question with one-click answers." |
-| 2:15 | Build checklist streams → preview appears | "The UI streams in file by file, and the preview is live." |
-| 2:30 | Pro → Code → Edit by hand: break a line → Fix it → read the toast → Memory → Billing ledger | "Now let me break something. It diagnoses the cause first. A past fix is only a hint, it's reused only if the cause matches, and fixes that failed are never repeated. After three tries it rolls back and asks me. And its own fixes aren't billed to me; the ledger shows that." |
-| 3:05 | Memory tab: edit one memory. Agents tab: Compile to Lyzr → LangGraph → CrewAI | "Memory isn't a black box: I can see, edit or delete anything. And one agent spec compiles to Lyzr, LangGraph, CrewAI or the OpenAI SDK, so choosing a framework is never a rewrite." |
-| 3:35 | Click **Connectors** → show the list and "Suggested by your plan" → close. Click the project name → show the project switcher | "Connectors are where agents get their tools: Slack, Gmail, Drive, HubSpot. GitHub and WordPress are live; the rest are a preview of the design. And I can switch projects from the top bar." |
-| 3:55 | ⌘K → type "how much am I paying" → Enter | "Feature search takes you straight to any feature. architect.new doesn't have one." |
-| 4:05 | Ship → Deploy → SEO + GEO report → Content tab: edit an FAQ → Push to GitHub → open the repo | "Ship runs a security check and deploys a pre-rendered page with meta tags, structured data and llms.txt, so it's found on Google and quoted by AI assistants. FAQs from the content editor feed into that. And the code goes to my own GitHub repo." |
-| 4:35 | Architecture diagram tab | "Under the hood: the app is on Vercel, data on Supabase with row-level security, and memory runs on Lyzr Cognis in Docker on AWS, because it needs a long-running server. Agent runs and hosting are placeholders for now, with the production design in ARCHITECTURE.md. From prompt to production. Thanks for watching." |
-
-### After recording
-
-- Trim the start and end; cut waits during plan, build and fix down to 2–3 seconds.
-- Chapters: Hook · Guest mode · Lyzr · Positioning · Plan · Build · Fix memory · Memory & agents ·
-  Connectors · Search · Ship · Architecture.
-- Captions on. Title: **"Architect 2.0: from prompt to production"**.
-- Share → Anyone with the link → test it in a private window → paste the link in "Any other
-  comments?".
-
----
-
-## Deploy checklist (Vercel)
-
-1. Supabase:
-   - SQL Editor → paste and run [`supabase/setup.sql`](supabase/setup.sql) (idempotent; safe to
-     re-run).
-   - Authentication → Sign In / Providers → enable **Anonymous sign-ins** (demo mode), **Google**
-     and **GitHub**.
-   - Authentication → URL Configuration: add `https://<your-vercel-domain>/auth/callback` to the
-     redirect URLs, and set the Site URL.
-2. Vercel → New Project → import `mannan-naidu/lyzr-architect-2` → Framework: Next.js (pnpm is
-   detected).
-3. Environment variables (Production + Preview). See [`.env.example`](.env.example):
-   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `MEMORY_SERVICE_URL`, `MEMORY_SERVICE_TOKEN`: printed by `memory-service/setup.sh` on the AWS server (see docs/SETUP.md §8).
-   - At least one LLM key (`GROQ_API_KEY` is the cheapest and fastest for the demo; add
-     `ANTHROPIC_API_KEY` etc. as available).
-   - `GITHUB_TOKEN_KEY`: 32 random bytes, base64 (`openssl rand -base64 32`).
-   - Optional: `DAILY_TOKEN_CAP`, `DEMO_TOKEN_CAP`.
-4. GitHub OAuth app (used by Supabase): callback
-   `https://<project-ref>.supabase.co/auth/v1/callback`.
-5. Deploy, then smoke test:
-   - demo login → plan → build → preview → Memory tab → Ship.
-6. Put the URL in the table at the top of this file.
-
-**Before submitting:**
-- Rotate any key that was ever pasted into a chat.
-- Confirm the repo is public.
-- Record the Loom.
+Two things I didn't get to say clearly in the video: first, this is a crowded space with giants
+(Lovable, Replit, Cursor, and the model companies themselves), which is exactly why the positioning
+has to be the intersection rather than "a better code generator". Second, the ⌘K feature search
+matches words today, and the production version is semantic search on the same engine as memory,
+so people can find a feature by describing it in their own words.

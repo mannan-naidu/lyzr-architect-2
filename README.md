@@ -13,6 +13,8 @@ it. It's built for Lyzr's TPM assignment and extends architect.new.
 
 ![Architecture](docs/architecture/architecture.png)
 
+→ **Live app:** https://lyzr-architect-2o.vercel.app · **Video walkthrough:** [Loom](https://www.loom.com/share/2b6f632aba244c0b9f9e66a5f128593c)
+
 → **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) · **Submission:** [SUBMISSION.md](SUBMISSION.md) · **Decisions:** [docs/decisions.md](docs/decisions.md) · **Setup:** [docs/SETUP.md](docs/SETUP.md)
 
 ## Design principles
@@ -49,7 +51,7 @@ it. It's built for Lyzr's TPM assignment and extends architect.new.
 | Hosting user apps | 🟡 Simulated | Logs, URL and history are recorded; Vercel API is the production design |
 | E2B sandboxes | 🟡 Simulated | Designed in ARCHITECTURE.md §6; Sandpack runs the UI today |
 
-Submission answers and the deploy checklist: [SUBMISSION.md](SUBMISSION.md).
+Submission answers: [SUBMISSION.md](SUBMISSION.md). Deploy steps: [docs/SETUP.md](docs/SETUP.md).
 
 ## Local setup
 
